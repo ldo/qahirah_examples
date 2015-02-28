@@ -1,0 +1,125 @@
+#!/usr/bin/python3
+#+
+# Demo of Cairo operators, reproducing the examples
+# shown at <http://cairographics.org/operators/>.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import qahirah as qah
+CAIRO = qah.CAIRO
+Vec = qah.Vector
+Rect = qah.Rect
+
+operator_names = \
+    ( # differ only in case from CAIRO.OPERATOR_xxx names
+        "clear",
+        "source",
+        "over",
+        "in",
+        "out",
+        "atop",
+        "dest",
+        "dest_over",
+        "dest_in",
+        "dest_out",
+        "dest_atop",
+        "xor",
+        "add",
+        "saturate",
+        "multiply",
+        "screen",
+        "overlay",
+        "darken",
+        "lighten",
+        "color_dodge",
+        "color_burn",
+        "hard_light",
+        "soft_light",
+        "difference",
+        "exclusion",
+        "HSL_hue",
+        "HSL_saturation",
+        "HSL_color",
+        "HSL_luminosity",
+    )
+nr_cols = math.ceil(math.sqrt(len(operator_names)))
+nr_rows = math.ceil(len(operator_names) / nr_cols)
+
+rect_size = Vec(120, 90)
+rect_1_pos = Vec(0, 0)
+rect_2_pos = Vec(40, 30)
+margin = Vec(10, 30)
+top_extra = 40
+draw_bounds = Rect.from_dimensions(rect_size + rect_2_pos + 2 * margin) - margin
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_ARGB32,
+    dimensions = Vec(nr_cols, nr_rows) * draw_bounds.dimensions + Vec(0, top_extra)
+  )
+sys.stderr.write("(rows, cols) = (%d, %d), pix size = (%d, %d)\n" % (nr_rows, nr_cols, pix.width, pix.height)) # debug
+g = qah.Context(pix)
+g.operator = CAIRO.OPERATOR_SOURCE
+g.set_source_rgba(0, 0, 0, 0)
+text_colour = (0, 0, 0, 1)
+g.paint()
+g.font_face = qah.FontFace.create_for_pattern("helvetica:weight=bold")
+# g.select_font_face("sans-serif", CAIRO.FONT_SLANT_OBLIQUE, CAIRO.FONT_WEIGHT_BOLD)
+g.set_font_size(24)
+title = "Cairo Drawing Operators"
+text_extents = g.text_extents(title)
+g.move_to \
+  ((
+    (pix.width - text_extents.width) / 2, text_extents.height + text_extents.y_bearing + top_extra / 2
+  ))
+g.set_source_rgba(*text_colour)
+g.show_text(title)
+row = 0
+col = 0
+for op_name in operator_names :
+    dest_rect = \
+        (
+            draw_bounds
+        +
+            Vec(col, row) * draw_bounds.dimensions
+        +
+            margin
+        +
+            Vec(0, top_extra)
+        )
+    g.matrix = draw_bounds.transform_to(dest_rect)
+    g.reset_clip()
+    g.new_path()
+    g.rectangle(draw_bounds)
+    g.clip() # just to ensure one figure doesn’t wipe out another
+    g.operator = CAIRO.OPERATOR_OVER
+    g.rectangle(Rect.from_dimensions(rect_size) + rect_1_pos)
+    g.set_source_rgba(0.7, 0, 0, 0.8)
+    g.fill()
+    g.operator = getattr(CAIRO, "OPERATOR_" + op_name.upper())
+    g.rectangle(Rect.from_dimensions(rect_size) + rect_2_pos)
+    g.set_source_rgba(0, 0, 0.9, 0.4)
+    g.fill()
+    text_extents = g.text_extents(op_name)
+    g.move_to \
+      ((
+        draw_bounds.middle.x - text_extents.width / 2,
+        draw_bounds.botright.y + text_extents.y_bearing + margin.y / 3
+      ))
+    g.operator = CAIRO.OPERATOR_SOURCE
+    g.set_source_rgba(*text_colour)
+    g.show_text(op_name)
+    col += 1
+    if col == nr_cols :
+        row += 1
+        col = 0
+    #end if
+#end for
+pix.flush()
+pix.write_to_png("%s.png" % os.path.basename(sys.argv[0]))
