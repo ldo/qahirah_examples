@@ -25,11 +25,13 @@ font_names = \
     )
 font_size = 48
 line_spacing = 1.5
+shadow_offset = 1.5
+shadow_thickness = 1.0
 
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
-    dimensions = round(Vec(1000, len(font_names) * font_size * line_spacing))
+    dimensions = round(Vec(1200, len(font_names) * font_size * line_spacing))
   )
 g = qah.Context(pix)
 g.set_source_rgb(1, 1, 1)
@@ -39,7 +41,8 @@ g.set_font_size(font_size)
 
 pos = Vec(10, font_size * line_spacing / 2)
 for font_name in font_names :
-    g.font_face = qah.FontFace.create_for_pattern(font_name)
+    plain_face = qah.FontFace.create_for_pattern(font_name)
+    g.font_face = plain_face
     g.move_to(pos)
     g.show_text(font_name)
     for name, suffix in \
@@ -51,6 +54,28 @@ for font_name in font_names :
     :
         g.font_face = qah.FontFace.create_for_pattern(font_name + suffix)
         g.show_text(" " + name)
+    #end for
+    g.font_face = plain_face
+    for name, shadow in \
+        (
+            ("outline", False),
+            ("shadow", True),
+        ) \
+    :
+        if shadow :
+            current_point = g.current_point
+            line_width = g.line_width
+            g.line_width *= shadow_thickness
+            g.rel_move_to((shadow_offset, shadow_offset))
+            g.text_path(" " + name)
+            g.stroke()
+            g.move_to(current_point)
+            g.line_width = line_width
+        #end if
+        g.text_path(" " + name)
+        current_point = g.current_point
+        g.stroke()
+        g.move_to(current_point)
     #end for
     pos += Vec(0, font_size * line_spacing)
 #end for
