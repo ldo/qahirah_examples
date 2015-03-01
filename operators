@@ -76,8 +76,7 @@ g.operator = CAIRO.OPERATOR_SOURCE
 g.set_source_rgba(0, 0, 0, 0)
 text_colour = (0, 0, 0, 1)
 g.paint()
-g.font_face = qah.FontFace.create_for_pattern("helvetica:weight=bold")
-# g.select_font_face("sans-serif", CAIRO.FONT_SLANT_OBLIQUE, CAIRO.FONT_WEIGHT_BOLD)
+g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
 g.set_font_size(24)
 title = "Cairo Drawing Operators"
 text_extents = g.text_extents(title)
