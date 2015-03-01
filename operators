@@ -49,6 +49,13 @@ operator_names = \
         "HSL_color",
         "HSL_luminosity",
     )
+unbounded = \
+    {
+        CAIRO.OPERATOR_IN,
+        CAIRO.OPERATOR_OUT,
+        CAIRO.OPERATOR_DEST_IN,
+        CAIRO.OPERATOR_DEST_ATOP,
+    }
 nr_cols = math.ceil(math.sqrt(len(operator_names)))
 nr_rows = math.ceil(len(operator_names) / nr_cols)
 
@@ -82,6 +89,7 @@ g.set_source_rgba(*text_colour)
 g.show_text(title)
 row = 0
 col = 0
+g.line_width = 2
 for op_name in operator_names :
     dest_rect = \
         (
@@ -103,6 +111,7 @@ for op_name in operator_names :
     g.set_source_rgba(0.7, 0, 0, 0.8)
     g.fill()
     g.operator = getattr(CAIRO, "OPERATOR_" + op_name.upper())
+    was_unbounded = g.operator in unbounded
     g.rectangle(Rect.from_dimensions(rect_size) + rect_2_pos)
     g.set_source_rgba(0, 0, 0.9, 0.4)
     g.fill()
@@ -115,6 +124,10 @@ for op_name in operator_names :
     g.operator = CAIRO.OPERATOR_SOURCE
     g.set_source_rgba(*text_colour)
     g.show_text(op_name)
+    if was_unbounded :
+        g.rectangle(draw_bounds.inset((2, 2)))
+        g.stroke()
+    #end if
     col += 1
     if col == nr_cols :
         row += 1
