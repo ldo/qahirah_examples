@@ -370,20 +370,21 @@ bwpats = \
 )
 
 def get_pat(index) :
-    result = qah.Pattern.create_for_surface \
-      (
-        qah.ImageSurface.create_for_array
-          (
-            arr = array.array("B", ((0, 255)[b > ord(" ")] for b in bwpats[index])),
-            format = CAIRO.FORMAT_A8,
-            dimensions = (8, 8),
-            stride = 8
-          )
-      )
-    result.filter = CAIRO.FILTER_NEAREST # for that gritty, pixelated look
-    result.extend = CAIRO.EXTEND_REPEAT
     return \
-        result
+        (
+            qah.Pattern.create_for_surface \
+              (
+                qah.ImageSurface.create_for_array
+                  (
+                    arr = array.array("B", ((0, 255)[b > ord(" ")] for b in bwpats[index])),
+                    format = CAIRO.FORMAT_A8,
+                    dimensions = (8, 8),
+                    stride = 8
+                  )
+              )
+            .set_filter(CAIRO.FILTER_NEAREST) # for that gritty, pixelated look
+            .set_extend(CAIRO.EXTEND_REPEAT)
+        )
 #end get_pat
 
 #+
@@ -456,5 +457,6 @@ for i in range(len(bwpats)) :
     #end for
     col += 1
 #end for
-pix.flush()
-pix.write_to_png("%s.png" % os.path.basename(sys.argv[0]))
+pix \
+    .flush() \
+    .write_to_png("%s.png" % os.path.basename(sys.argv[0]))
