@@ -1,0 +1,59 @@
+#!/usr/bin/python3
+#+
+# Demo of text and font support in Qahirah. For best results,
+# your system should have a decent range of fonts installed.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# This script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+CAIRO = qah.CAIRO
+Vec = qah.Vector
+
+font_names = \
+    ( # some popular names to try
+        "times",
+        "helvetica",
+        "courier",
+        "century schoolbook",
+        "linux biolinum",
+    )
+font_size = 48
+line_spacing = 1.5
+
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = round(Vec(1000, len(font_names) * font_size * line_spacing))
+  )
+g = qah.Context(pix)
+g.set_source_rgb(1, 1, 1)
+g.paint()
+g.set_source_rgb(0, 0, 0)
+g.set_font_size(font_size)
+
+pos = Vec(10, font_size * line_spacing / 2)
+for font_name in font_names :
+    g.font_face = qah.FontFace.create_for_pattern(font_name)
+    g.move_to(pos)
+    g.show_text(font_name)
+    for name, suffix in \
+        (
+            ("italic", ":slant=italic"),
+            ("bold", ":weight=bold"),
+            ("bold-italic", ":slant=italic:weight=bold"),
+        ) \
+    :
+        g.font_face = qah.FontFace.create_for_pattern(font_name + suffix)
+        g.show_text(" " + name)
+    #end for
+    pos += Vec(0, font_size * line_spacing)
+#end for
+
+pix.flush()
+pix.write_to_png("%s.png" % os.path.basename(sys.argv[0]))
