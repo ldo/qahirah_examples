@@ -46,11 +46,13 @@ dst_rect = Rect.from_dimensions(cell_size) + margins
 dst_step = Vec(cell_size.x + margins.x, 0)
 
 # create path
-g.new_path()
-g.arc(centre = (100, 130), radius = 70, angle1 = 0, angle2 = 360 / deg)
-g.new_sub_path()
-g.arc(centre = (100, 70), radius = 70, angle1 = 0, angle2 = 360 / deg)
-shape = g.copy_path()
+shape = \
+    (g
+        .new_path()
+        .arc(centre = (100, 130), radius = 70, angle1 = 0, angle2 = 360 / deg)
+        .new_sub_path()
+        .arc(centre = (100, 70), radius = 70, angle1 = 0, angle2 = 360 / deg)
+    ).copy_path()
 # sys.stderr.write(repr(list(shape.elements)) + "\n") # debug
 
 # now do the actual drawing
