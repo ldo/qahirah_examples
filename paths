@@ -10,12 +10,12 @@
 
 import sys
 import os
-import math
 import colorsys
 import qahirah as qah
 CAIRO = qah.CAIRO
 Vec = qah.Vector
 Rect = qah.Rect
+deg = qah.deg
 
 nr_figures = 5
 margins = Vec(16, 16)
@@ -47,9 +47,9 @@ dst_step = Vec(cell_size.x + margins.x, 0)
 
 # create path
 g.new_path()
-g.arc(centre = (100, 130), radius = 70, angle1 = 0, angle2 = 2 * math.pi)
+g.arc(centre = (100, 130), radius = 70, angle1 = 0, angle2 = 360 / deg)
 g.new_sub_path()
-g.arc(centre = (100, 70), radius = 70, angle1 = 0, angle2 = 2 * math.pi)
+g.arc(centre = (100, 70), radius = 70, angle1 = 0, angle2 = 360 / deg)
 shape = g.copy_path()
 # sys.stderr.write(repr(list(shape.elements)) + "\n") # debug
 
