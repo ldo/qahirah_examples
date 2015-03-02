@@ -1,9 +1,13 @@
-Here are some examples of the use of my Qahirah Python binding for
-the Cairo graphics library. You will need to have that installed
-before you can run these.
+Here are some examples of the use of my
+[Qahirah](https://github.com/ldo/qahirah) Python binding for the Cairo
+graphics library. You will need to have that installed before you can
+run these.
 
 Each example script generates its output to a PNG file with the same
 basename as the script. Thus, to run a script *script* and see its
 output, you could do something like
 
 > ./*script* && display *script*.png
+
+Lawrence D'Oliveiro <ldo@geek-central.gen.nz>
+2015 March 2
