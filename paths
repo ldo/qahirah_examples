@@ -13,13 +13,11 @@ import os
 import colorsys
 import qahirah as qah
 CAIRO = qah.CAIRO
-Vector = qah.Vector
+Matrix = qah.Matrix
 Rect = qah.Rect
 deg = qah.deg
 
 nr_figures = 5
-margins = Vector(16, 16)
-cell_size = Vector(200, 200)
 
 pat = qah.Pattern.create_linear \
   (
@@ -38,12 +36,12 @@ pat.matrix = Rect.from_dimensions((1, 1)).transform_to(Rect.from_dimensions((0.1
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
-    dimensions = (cell_size + margins) * Vector(nr_figures, 1) + margins
+    dimensions = (600, 600)
   )
 g = qah.Context(pix)
-src_rect = Rect.from_dimensions(cell_size)
-dst_rect = Rect.from_dimensions(cell_size) + margins
-dst_step = Vector(cell_size.x + margins.x, 0)
+origin_to_center = Matrix.translation(pix.dimensions / 2)
+angle_step = 360 / deg / nr_figures
+offset_from_origin = Matrix.translation((35, 35))
 
 # create path
 shape = \
@@ -64,7 +62,7 @@ shape = \
 )
 
 (g
-    .set_matrix(src_rect.transform_to(dst_rect))
+    .set_matrix(origin_to_center * Matrix.rotation(angle_step) * offset_from_origin)
     .new_path()
     .append_path(shape)
     .set_dash(((5, 2, 5, 2, 5, 2, 2, 2, 2, 2, 2, 2), 0))
@@ -73,8 +71,7 @@ shape = \
     .stroke()
 ).dash = ((), 0)
 
-dst_rect += dst_step
-g.matrix = src_rect.transform_to(dst_rect)
+g.matrix = g.matrix = origin_to_center * Matrix.rotation(2 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.dash = ((5, 8, 2, 8), 0)
@@ -83,8 +80,7 @@ g.line_cap = CAIRO.LINE_CAP_ROUND
 g.stroke()
 g.dash = ((), 0)
 
-dst_rect += dst_step
-g.matrix = src_rect.transform_to(dst_rect)
+g.matrix = g.matrix = origin_to_center * Matrix.rotation(3 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.dash = ((5, 8, 2, 8), 0)
@@ -95,15 +91,13 @@ g.dash = ((), 0)
 
 g.source = pat
 
-dst_rect += dst_step
-g.matrix = src_rect.transform_to(dst_rect)
+g.matrix = g.matrix = origin_to_center * Matrix.rotation(4 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.fill_rule = CAIRO.FILL_RULE_WINDING
 g.fill()
 
-dst_rect += dst_step
-g.matrix = src_rect.transform_to(dst_rect)
+g.matrix = g.matrix = origin_to_center * Matrix.rotation(0 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.fill_rule = CAIRO.FILL_RULE_EVEN_ODD
