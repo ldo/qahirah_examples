@@ -13,13 +13,13 @@ import os
 import colorsys
 import qahirah as qah
 CAIRO = qah.CAIRO
-Vec = qah.Vector
+Vector = qah.Vector
 Rect = qah.Rect
 deg = qah.deg
 
 nr_figures = 5
-margins = Vec(16, 16)
-cell_size = Vec(200, 200)
+margins = Vector(16, 16)
+cell_size = Vector(200, 200)
 
 pat = qah.Pattern.create_linear \
   (
@@ -38,12 +38,12 @@ pat.matrix = Rect.from_dimensions((1, 1)).transform_to(Rect.from_dimensions((0.1
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
-    dimensions = (cell_size + margins) * Vec(nr_figures, 1) + margins
+    dimensions = (cell_size + margins) * Vector(nr_figures, 1) + margins
   )
 g = qah.Context(pix)
 src_rect = Rect.from_dimensions(cell_size)
 dst_rect = Rect.from_dimensions(cell_size) + margins
-dst_step = Vec(cell_size.x + margins.x, 0)
+dst_step = Vector(cell_size.x + margins.x, 0)
 
 # create path
 shape = \
