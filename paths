@@ -49,9 +49,9 @@ dst_step = Vec(cell_size.x + margins.x, 0)
 shape = \
     (g
         .new_path()
-        .arc(centre = (100, 130), radius = 70, angle1 = 0, angle2 = 360 / deg)
+        .arc(center = (100, 130), radius = 70, angle1 = 0, angle2 = 360 / deg)
         .new_sub_path()
-        .arc(centre = (100, 70), radius = 70, angle1 = 0, angle2 = 360 / deg)
+        .arc(center = (100, 70), radius = 70, angle1 = 0, angle2 = 360 / deg)
     ).copy_path()
 # sys.stderr.write(repr(list(shape.elements)) + "\n") # debug
 
