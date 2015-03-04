@@ -464,7 +464,7 @@ for i in range(len(bwpats)) :
     g.set_source_rgba(1, 1, 1, 1)
     g.fill()
     g.new_path()
-    pat.matrix *= Matrix.rotation(45 / deg, center = (4, 4))
+    pat.matrix *= Matrix.rotation(45 / deg, centre = (4, 4))
     pat.filter = CAIRO.FILTER_BEST
     g.source = pat
     g.rectangle(cell)
