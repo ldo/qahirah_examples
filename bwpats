@@ -17,7 +17,9 @@ import array
 import colorsys
 import qahirah as qah
 CAIRO = qah.CAIRO
+deg = qah.deg
 Vec = qah.Vector
+Matrix = qah.Matrix
 Rect = qah.Rect
 
 #+
@@ -391,7 +393,7 @@ def get_pat(index) :
 # Mainline
 #-
 
-nr_rows = 3
+nr_rows = 4
 
 saturation = 0.5
 intensity = 0.75
@@ -455,6 +457,19 @@ for i in range(len(bwpats)) :
         g.reset_clip()
         pat1, pat2 = pat2, pat1
     #end for
+    cell += Vec(0, 1) * (cell_size + margins)
+    g.new_path()
+    g.rectangle(cell)
+    g.operator = CAIRO.OPERATOR_SOURCE
+    g.set_source_rgba(1, 1, 1, 1)
+    g.fill()
+    g.new_path()
+    pat.matrix *= Matrix.rotation(45 / deg, center = (4, 4))
+    pat.filter = CAIRO.FILTER_BEST
+    g.source = pat
+    g.rectangle(cell)
+    g.operator = CAIRO.OPERATOR_OVER
+    g.fill()
     col += 1
 #end for
 pix \
