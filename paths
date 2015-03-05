@@ -39,9 +39,9 @@ pix = qah.ImageSurface.create \
     dimensions = (600, 600)
   )
 g = qah.Context(pix)
-origin_to_centre = Matrix.translation(pix.dimensions / 2)
+origin_to_centre = Matrix.translate(pix.dimensions / 2)
 angle_step = 360 / deg / nr_figures
-offset_from_origin = Matrix.translation((0, 70))
+offset_from_origin = Matrix.translate((0, 70))
 
 # create path
 shape = \
@@ -50,7 +50,7 @@ shape = \
         .arc(centre = (0, 65), radius = 35, angle1 = 0, angle2 = 360 / deg)
         .new_sub_path()
         .arc(centre = (0, 35), radius = 35, angle1 = 0, angle2 = 360 / deg)
-    ).copy_path().transform(Matrix.scaling(2))
+    ).copy_path().transform(Matrix.scale(2))
 # sys.stderr.write(repr(list(shape.elements)) + "\n") # debug
 
 # now do the actual drawing
@@ -62,7 +62,7 @@ shape = \
 )
 
 (g
-    .set_matrix(origin_to_centre * Matrix.rotation(angle_step) * offset_from_origin)
+    .set_matrix(origin_to_centre * Matrix.rotate(angle_step) * offset_from_origin)
     .new_path()
     .append_path(shape)
     .set_dash(((5, 2, 5, 2, 5, 2, 2, 2, 2, 2, 2, 2), 0))
@@ -71,7 +71,7 @@ shape = \
     .stroke()
 ).dash = ((), 0)
 
-g.matrix = g.matrix = origin_to_centre * Matrix.rotation(2 * angle_step) * offset_from_origin
+g.matrix = g.matrix = origin_to_centre * Matrix.rotate(2 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.dash = ((5, 8, 2, 8), 0)
@@ -80,7 +80,7 @@ g.line_cap = CAIRO.LINE_CAP_ROUND
 g.stroke()
 g.dash = ((), 0)
 
-g.matrix = g.matrix = origin_to_centre * Matrix.rotation(3 * angle_step) * offset_from_origin
+g.matrix = g.matrix = origin_to_centre * Matrix.rotate(3 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.dash = ((5, 8, 2, 8), 0)
@@ -91,13 +91,13 @@ g.dash = ((), 0)
 
 g.source = pat
 
-g.matrix = g.matrix = origin_to_centre * Matrix.rotation(4 * angle_step) * offset_from_origin
+g.matrix = g.matrix = origin_to_centre * Matrix.rotate(4 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.fill_rule = CAIRO.FILL_RULE_WINDING
 g.fill()
 
-g.matrix = g.matrix = origin_to_centre * Matrix.rotation(0 * angle_step) * offset_from_origin
+g.matrix = g.matrix = origin_to_centre * Matrix.rotate(0 * angle_step) * offset_from_origin
 g.new_path()
 g.append_path(shape)
 g.fill_rule = CAIRO.FILL_RULE_EVEN_ODD
