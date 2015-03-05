@@ -56,7 +56,7 @@ shape = \
 # now do the actual drawing
 (g
     .set_operator(CAIRO.OPERATOR_SOURCE)
-    .set_source_colour(Colour.from_grey(1))
+    .set_source_colour(Colour.grey(1))
     .paint()
     .set_source_colour(Colour.from_hsva((0.4, 0.9, 0.4)))
 )

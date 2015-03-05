@@ -434,7 +434,7 @@ for i in range(len(bwpats)) :
     g.new_path()
     g.rectangle(cell)
     g.operator = CAIRO.OPERATOR_SOURCE
-    g.set_source_colour(Colour.from_grey(1))
+    g.set_source_colour(Colour.grey(1))
     g.fill()
     g.new_path()
     g.source = pat
@@ -461,7 +461,7 @@ for i in range(len(bwpats)) :
     g.new_path()
     g.rectangle(cell)
     g.operator = CAIRO.OPERATOR_SOURCE
-    g.set_source_colour(Colour.from_grey(1))
+    g.set_source_colour(Colour.grey(1))
     g.fill()
     g.new_path()
     pat.matrix *= Matrix.rotation(45 / deg, centre = (4, 4))
