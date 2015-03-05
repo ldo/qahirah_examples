@@ -34,9 +34,9 @@ pix = qah.ImageSurface.create \
     dimensions = round(Vector(1200, len(font_names) * font_size * line_spacing))
   )
 g = qah.Context(pix)
-g.set_source_rgb(1, 1, 1)
+g.set_source_colour(qah.Colour.from_grey(1))
 g.paint()
-g.set_source_rgb(0, 0, 0)
+g.set_source_colour((0, 0, 0))
 g.set_font_size(font_size)
 
 pos = Vector(10, font_size * line_spacing / 2)

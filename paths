@@ -10,9 +10,9 @@
 
 import sys
 import os
-import colorsys
 import qahirah as qah
 CAIRO = qah.CAIRO
+Colour = qah.Colour
 Matrix = qah.Matrix
 Rect = qah.Rect
 deg = qah.deg
@@ -23,11 +23,11 @@ pat = qah.Pattern.create_linear \
   (
     p0 = (0, 0),
     p1 = (1, 1),
-    color_stops =
+    colour_stops =
         (
-            ((0,) + colorsys.hsv_to_rgb(0.6, 0.9, 0.7)),
-            ((0.5,) + colorsys.hsv_to_rgb(0.1, 0.9, 0.9)),
-            ((0,) + colorsys.hsv_to_rgb(0.6, 0.9, 0.7)),
+            (0, Colour.from_hsva((0.6, 0.9, 0.7))),
+            (0.5, Colour.from_hsva((0.1, 0.9, 0.9))),
+            (0, Colour.from_hsva((0.6, 0.9, 0.7))),
         )
   )
 pat.extend = CAIRO.EXTEND_REPEAT
@@ -56,9 +56,9 @@ shape = \
 # now do the actual drawing
 (g
     .set_operator(CAIRO.OPERATOR_SOURCE)
-    .set_source_rgb(1, 1, 1)
+    .set_source_colour(Colour.from_grey(1))
     .paint()
-    .set_source_rgb(*colorsys.hsv_to_rgb(0.4, 0.9, 0.4))
+    .set_source_colour(Colour.from_hsva((0.4, 0.9, 0.4)))
 )
 
 (g

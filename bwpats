@@ -14,13 +14,13 @@ import sys
 import os
 import math
 import array
-import colorsys
 import qahirah as qah
 CAIRO = qah.CAIRO
 deg = qah.deg
 Vec = qah.Vector
 Matrix = qah.Matrix
 Rect = qah.Rect
+Colour = qah.Colour
 
 #+
 # The 38 classic B&W Mac system patterns from the PAT# 0 resource
@@ -399,18 +399,18 @@ saturation = 0.5
 intensity = 0.75
 pat1 = \
     (qah.Pattern.create_linear(Vec(0, 0), Vec(0, 1))
-        .add_color_stop_rgb(*((0,) + colorsys.hsv_to_rgb(.15, saturation, intensity)))
-        .add_color_stop_rgb(*((1,) + colorsys.hsv_to_rgb(.65, saturation, intensity)))
+        .add_colour_stop(0, Colour.from_hsva((.15, saturation, intensity)))
+        .add_colour_stop(1, Colour.from_hsva((.65, saturation, intensity)))
     )
   # example of gradient pattern definition using method chaining
 pat2 = qah.Pattern.create_linear \
   (
     p0 = (0, 0),
     p1 = (1, 0),
-    color_stops =
+    colour_stops =
         (
-            (0,) + colorsys.hsv_to_rgb(.41, saturation, intensity),
-            (1,) + colorsys.hsv_to_rgb(.91, saturation, intensity),
+            (0, Colour.from_hsva((.41, saturation, intensity))),
+            (1, Colour.from_hsva((.91, saturation, intensity))),
         )
   )
   # example of gradient pattern definition by including colour stops in create call
@@ -424,7 +424,7 @@ pix = qah.ImageSurface.create \
   )
 g = qah.Context(pix)
 g.operator = CAIRO.OPERATOR_SOURCE
-g.set_source_rgba(0, 0, 0, 0)
+g.set_source_colour((0, 0, 0, 0))
 g.paint()
 col = 0
 for i in range(len(bwpats)) :
@@ -434,7 +434,7 @@ for i in range(len(bwpats)) :
     g.new_path()
     g.rectangle(cell)
     g.operator = CAIRO.OPERATOR_SOURCE
-    g.set_source_rgba(1, 1, 1, 1)
+    g.set_source_colour(Colour.from_grey(1))
     g.fill()
     g.new_path()
     g.source = pat
@@ -461,7 +461,7 @@ for i in range(len(bwpats)) :
     g.new_path()
     g.rectangle(cell)
     g.operator = CAIRO.OPERATOR_SOURCE
-    g.set_source_rgba(1, 1, 1, 1)
+    g.set_source_colour(Colour.from_grey(1))
     g.fill()
     g.new_path()
     pat.matrix *= Matrix.rotation(45 / deg, centre = (4, 4))
