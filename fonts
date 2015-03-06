@@ -26,7 +26,9 @@ font_names = \
 font_size = 48
 line_spacing = 1.5
 shadow_offset = 1.5
-shadow_thickness = 1.0
+shadow_thickness = 1.5
+background_colour = qah.Colour.grey(1)
+text_colour = qah.Colour.grey(0)
 
 pix = qah.ImageSurface.create \
   (
@@ -34,9 +36,9 @@ pix = qah.ImageSurface.create \
     dimensions = round(Vector(1200, len(font_names) * font_size * line_spacing))
   )
 g = qah.Context(pix)
-g.set_source_colour(qah.Colour.grey(1))
+g.set_source_colour(background_colour)
 g.paint()
-g.set_source_colour((0, 0, 0))
+g.set_source_colour(text_colour)
 g.set_font_size(font_size)
 
 pos = Vector(10, font_size * line_spacing / 2)
@@ -63,19 +65,24 @@ for font_name in font_names :
         ) \
     :
         if shadow :
-            current_point = g.current_point
-            line_width = g.line_width
+            save_point = g.current_point
+            save_line_width = g.line_width
             g.line_width *= shadow_thickness
             g.rel_move_to((shadow_offset, shadow_offset))
             g.text_path(" " + name)
             g.stroke()
-            g.move_to(current_point)
-            g.line_width = line_width
+            g.move_to(save_point)
+            g.line_width = save_line_width
+            g.text_path(" " + name)
+            g.set_source_colour(background_colour)
+            g.fill()
+            g.move_to(save_point)
+            g.set_source_colour(text_colour)
         #end if
         g.text_path(" " + name)
-        current_point = g.current_point
+        save_point = g.current_point
         g.stroke()
-        g.move_to(current_point)
+        g.move_to(save_point)
     #end for
     pos += Vector(0, font_size * line_spacing)
 #end for
