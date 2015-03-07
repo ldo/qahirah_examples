@@ -49,7 +49,7 @@ c2 = c3 + (c0 - c3).rotate(tilt) * curve_factor
 elts = [Path.MoveTo(c0)]
 tips = []
 for i in range(3) :
-    mat = Matrix.rotate(- i / 3 * 360 / deg)
+    mat = Matrix.rotate(- i / 3 * qah.circle)
     tips.append(mat.map(c0))
     elts.append(Path.CurveTo(c1, c2, c3).transform(mat))
 #end for

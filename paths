@@ -11,11 +11,12 @@
 import sys
 import os
 import qahirah as qah
-CAIRO = qah.CAIRO
-Colour = qah.Colour
-Matrix = qah.Matrix
-Rect = qah.Rect
-deg = qah.deg
+from qahirah import \
+    CAIRO, \
+    circle, \
+    Colour, \
+    Matrix, \
+    Rect
 
 nr_figures = 5
 
@@ -40,16 +41,16 @@ pix = qah.ImageSurface.create \
   )
 g = qah.Context(pix)
 origin_to_centre = Matrix.translate(pix.dimensions / 2)
-angle_step = 360 / deg / nr_figures
+angle_step = circle / nr_figures
 offset_from_origin = Matrix.translate((0, 70))
 
 # create path
 shape = \
     (g
         .new_path()
-        .arc(centre = (0, 65), radius = 35, angle1 = 0, angle2 = 360 / deg)
+        .arc(centre = (0, 65), radius = 35, angle1 = 0, angle2 = circle)
         .new_sub_path()
-        .arc(centre = (0, 35), radius = 35, angle1 = 0, angle2 = 360 / deg)
+        .arc(centre = (0, 35), radius = 35, angle1 = 0, angle2 = circle)
     ).copy_path().transform(Matrix.scale(2))
 # sys.stderr.write(repr(list(shape.elements)) + "\n") # debug
 

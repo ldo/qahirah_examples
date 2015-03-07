@@ -44,20 +44,20 @@ g = qah.Context(pix).set_matrix(Matrix.translate(Vector(1, 1) * scope_radius))
 )
 (g # scope background
     .set_source_colour(bg_colour)
-    .arc(centre = (0, 0), radius = scope_radius, angle1 = 0, angle2 = 360 / deg)
+    .arc(centre = (0, 0), radius = scope_radius, angle1 = 0, angle2 = qah.circle)
     .fill()
 )
 g.source_colour = grid_colour
 g.line_width = 1
 for i in range(nr_radial_steps) :
     # circular grid lines
-    g.arc(centre = (0, 0), radius = (i + 1) / (nr_radial_steps + 1) * scope_radius, angle1 = 0, angle2 = 360 / deg)
+    g.arc(centre = (0, 0), radius = (i + 1) / (nr_radial_steps + 1) * scope_radius, angle1 = 0, angle2 = qah.circle)
     g.stroke()
 #end for
 for i in range(nr_angle_steps) :
     # radial grid lines
     g.move_to((0, 0))
-    g.line_to(Vector(-1, 0).rotate(i / nr_angle_steps * 360 / deg) * scope_radius)
+    g.line_to(Vector(-1, 0).rotate(i / nr_angle_steps * qah.circle) * scope_radius)
 #end for
 g.stroke()
 
