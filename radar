@@ -1,0 +1,93 @@
+#!/usr/bin/python3
+#+
+# A simulation of an analog radar trace.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    deg, \
+    Matrix, \
+    Path, \
+    Rect, \
+    Vector
+
+scope_radius = 300
+nr_radial_steps = 5
+nr_angle_steps = 16
+bg_colour = Colour.from_hsva((.36, .7, .3))
+grid_colour = Colour.from_hsva((.17, 1, .7))
+trace_colour = Colour.from_hsva((.17, 1, 1))
+trace_fade_colour = trace_colour.replace_alpha(0)
+trace_width_angle = 25 / deg
+trace_pos_angle = 105 / deg
+
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_ARGB32,
+    dimensions = Vector(2, 2) * scope_radius
+  )
+g = qah.Context(pix).set_matrix(Matrix.translate(Vector(1, 1) * scope_radius))
+(g
+    .set_source_colour(Colour.grey(0, 0))
+    .set_operator(CAIRO.OPERATOR_SOURCE)
+    .paint()
+    .set_operator(CAIRO.OPERATOR_OVER)
+)
+(g # scope background
+    .set_source_colour(bg_colour)
+    .arc(centre = (0, 0), radius = scope_radius, angle1 = 0, angle2 = 360 / deg)
+    .fill()
+)
+g.source_colour = grid_colour
+g.line_width = 1
+for i in range(nr_radial_steps) :
+    # circular grid lines
+    g.arc(centre = (0, 0), radius = (i + 1) / (nr_radial_steps + 1) * scope_radius, angle1 = 0, angle2 = 360 / deg)
+    g.stroke()
+#end for
+for i in range(nr_angle_steps) :
+    # radial grid lines
+    g.move_to((0, 0))
+    g.line_to(Vector(-1, 0).rotate(i / nr_angle_steps * 360 / deg) * scope_radius)
+#end for
+g.stroke()
+
+fudge = 1.1 # doesn't matter if the pattern extends a little beyond the curve bounds
+trace_pat = \
+    (qah.MeshPattern.create()
+        .begin_patch()
+        .move_to((0, 0))
+        .line_to(Vector(0, - scope_radius).rotate(- trace_width_angle))
+        .curve_to
+          (
+            Vector(0, - scope_radius * fudge).rotate(- 2 * trace_width_angle / 3),
+            Vector(0, - scope_radius * fudge).rotate(- 1 * trace_width_angle / 3),
+            (0, - scope_radius)
+          )
+        .line_to((0, 0))
+        .line_to((0, 0))
+        .set_corner_colour(0, trace_fade_colour)
+        .set_corner_colour(1, trace_fade_colour)
+        .set_corner_colour(2, trace_colour)
+        .set_corner_colour(3, trace_colour)
+        .end_patch()
+    )
+g.transform(Matrix.rotate(trace_pos_angle))
+(g
+    .move_to((0, 0))
+    .arc(centre = (0, 0), radius = scope_radius, angle1 = - trace_width_angle - 90 / deg, angle2 = - 90 / deg)
+    .line_to((0, 0))
+    .set_source(trace_pat)
+    .fill()
+)
+
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
