@@ -39,9 +39,9 @@ ctx = \
 
 # construct triwing pattern
 curve_factor = .7
-tilt = 30 / deg
-c0 = Matrix.rotate(30 / deg).map(Vector(1, 0))
-c3 = Matrix.rotate(- 120 / deg).map(c0)
+tilt = 30 * deg
+c0 = Matrix.rotate(30 * deg).map(Vector(1, 0))
+c3 = Matrix.rotate(- 120 * deg).map(c0)
 c1 = c0 + (c3 - c0).rotate(tilt) * curve_factor
 c2 = c3 + (c0 - c3).rotate(tilt) * curve_factor
 # actually centre part should be thinner, but that would require another curve segment
@@ -73,7 +73,7 @@ triwing_pattern_dimensions = \
 tile = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
-    dimensions = triwing_pattern_dimensions * pattern_res
+    dimensions = round(triwing_pattern_dimensions * pattern_res)
   )
 (qah.Context(tile)
     .set_matrix(Matrix.scale(pattern_res) * Matrix.translate(- triwing_bounds.topleft))
@@ -83,9 +83,9 @@ tile = qah.ImageSurface.create \
     .set_source_colour(Colour.grey(0))
     .new_path()
     .append_path(triwing)
-    .append_path(triwing.transform(Matrix.rotate(120 / deg, tips[0])))
-    .append_path(triwing.transform(Matrix.rotate(240 / deg, tips[0])))
-    .append_path(triwing.transform(Matrix.rotate(120 / deg, tips[2])))
+    .append_path(triwing.transform(Matrix.rotate(120 * deg, tips[0])))
+    .append_path(triwing.transform(Matrix.rotate(240 * deg, tips[0])))
+    .append_path(triwing.transform(Matrix.rotate(120 * deg, tips[2])))
     .append_path(triwing.transform(Matrix.translate(tips[1] - tips[2])))
     .fill()
 )
@@ -126,7 +126,7 @@ arrowing = Path \
 tile = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
-    dimensions = arrowing_dimensions * pattern_res * 1.5
+    dimensions = round(arrowing_dimensions * pattern_res * 1.5)
   )
 (qah.Context(tile)
     .set_matrix((Rect.from_dimensions(arrowing_dimensions) - Vector(0, arrowing_dimensions.y)).transform_to(Rect.from_dimensions(tile.dimensions)))
@@ -136,14 +136,14 @@ tile = qah.ImageSurface.create \
     .set_source_colour(Colour.grey(0))
     .new_path()
     .append_path(arrowing)
-    .append_path(arrowing.transform(Matrix.rotate(180 / deg, points[2])))
-    .append_path(arrowing.transform(Matrix.rotate(180 / deg, points[0])))
-    .append_path(arrowing.transform(Matrix.rotate(180 / deg, points[2]) * Matrix.rotate(180 / deg, points[4])))
-    .append_path(arrowing.transform(Matrix.rotate(180 / deg, points[4])))
-    .append_path(arrowing.transform(Matrix.rotate(180 / deg, points[2]) * Matrix.rotate(180 / deg, points[0])))
+    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[2])))
+    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[0])))
+    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[2]) * Matrix.rotate(180 * deg, points[4])))
+    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[4])))
+    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[2]) * Matrix.rotate(180 * deg, points[0])))
     .append_path(arrowing.transform(Matrix.translate((arrowing_dimensions.x, 0))))
-    .append_path(arrowing.transform(Matrix.translate((arrowing_dimensions.x, 0)) * Matrix.rotate(180 / deg, points[0])))
-    .append_path(arrowing.transform(Matrix.translate(arrowing_dimensions * Vector(1, -1)) * Matrix.rotate(180 / deg, points[0])))
+    .append_path(arrowing.transform(Matrix.translate((arrowing_dimensions.x, 0)) * Matrix.rotate(180 * deg, points[0])))
+    .append_path(arrowing.transform(Matrix.translate(arrowing_dimensions * Vector(1, -1)) * Matrix.rotate(180 * deg, points[0])))
     .fill()
 )
 tile.flush()
