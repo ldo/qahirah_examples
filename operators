@@ -102,15 +102,17 @@ for op_name in operator_names :
         )
     g.matrix = draw_bounds.transform_to(dest_rect)
     g.reset_clip()
-    g.new_path()
-    g.rectangle(draw_bounds)
-    g.clip() # just to ensure one figure doesn’t wipe out another
     g.operator = CAIRO.OPERATOR_OVER
     g.rectangle(Rect.from_dimensions(rect_size) + rect_1_pos)
     g.set_source_colour((0.7, 0, 0, 0.8))
     g.fill()
     g.operator = getattr(CAIRO, "OPERATOR_" + op_name.upper())
-    was_unbounded = g.operator in unbounded
+    op_unbounded = g.operator in unbounded
+    if op_unbounded :
+        g.new_path()
+        g.rectangle(draw_bounds)
+        g.clip() # to prevent figure from wiping out others
+    #end if
     g.rectangle(Rect.from_dimensions(rect_size) + rect_2_pos)
     g.set_source_colour((0, 0, 0.9, 0.4))
     g.fill()
@@ -123,7 +125,7 @@ for op_name in operator_names :
     g.operator = CAIRO.OPERATOR_SOURCE
     g.set_source_colour(text_colour)
     g.show_text(op_name)
-    if was_unbounded :
+    if op_unbounded :
         g.rectangle(draw_bounds.inset((2, 2)))
         g.stroke()
     #end if
