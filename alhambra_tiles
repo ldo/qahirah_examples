@@ -21,13 +21,136 @@ from qahirah import \
     Rect, \
     Vector
 
+#+
+# The patterns
+#-
+
+def triwing(tilt, curve_factor, pattern_res) :
+    "generates a image pattern with three curvy arms."
+    c0 = Vector(1, 0).rotate(30 * deg)
+    c3 = c0.rotate(- 120 * deg)
+    c1 = c0 + (c3 - c0).rotate(tilt) * curve_factor
+    c2 = c3 + (c0 - c3).rotate(tilt) * curve_factor
+    # actually centre part should be thinner, but that would require another curve segment
+
+    elts = [Path.MoveTo(c0)]
+    tips = []
+    for i in range(3) :
+        mat = Matrix.rotate(- i / 3 * qah.circle)
+        tips.append(mat.map(c0))
+        elts.append(Path.CurveTo(c1, c2, c3).transform(mat))
+    #end for
+    elts.append(Path.Close())
+    shape = Path(elts)
+    path_bounds = \
+        Rect.from_corners \
+          (
+            (min(p.x for p in tips), min(p.y for p in tips)),
+            (max(p.x for p in tips), max(p.y for p in tips)),
+          )
+    # sys.stderr.write("triwing bounds = %s\n" % repr(path_bounds)) # debug
+    pattern_dimensions = \
+        Vector \
+          (
+            x = path_bounds.width,
+            y = tips[2].y - 2 * tips[1].y + tips[0].y
+          )
+    # sys.stderr.write("triwing bounds = %s, pat dimensions = %s\n" % (repr(path_bounds), repr(pattern_dimensions))) # debug
+
+    tile = qah.ImageSurface.create \
+      (
+        format = CAIRO.FORMAT_RGB24,
+        dimensions = round(pattern_dimensions * pattern_res)
+      )
+    (qah.Context(tile)
+        .set_matrix(Matrix.scale(pattern_res) * Matrix.translate(- path_bounds.topleft))
+        .set_source_colour(Colour.grey(1))
+        .set_operator(CAIRO.OPERATOR_SOURCE)
+        .paint()
+        .set_source_colour(Colour.grey(0))
+        .new_path()
+        .append_path(shape)
+        .append_path(shape.transform(Matrix.rotate(120 * deg, tips[0])))
+        .append_path(shape.transform(Matrix.rotate(240 * deg, tips[0])))
+        .append_path(shape.transform(Matrix.rotate(120 * deg, tips[2])))
+        .append_path(shape.transform(Matrix.translate(tips[1] - tips[2])))
+        .fill()
+    )
+    tile.flush()
+    return \
+        qah.Pattern.create_for_surface(tile).set_extend(CAIRO.EXTEND_REPEAT)
+#end triwing
+
+def arrowing(wing_ratio, pattern_res) :
+    "generates an image pattern with wings and a pointy part."
+    halfangle = math.acos(0.5 / math.hypot(wing_ratio, 1 - wing_ratio)) - math.atan2(1 - wing_ratio, wing_ratio)
+    # halfangle tied to wing_ratio so that gaps between shapes have same shape as shape itself
+
+    points = \
+        [
+            Vector(0, 0),
+            Matrix.rotate(halfangle).map(Vector(0, - wing_ratio)),
+            Vector(.5, -.5),
+            Matrix.rotate(halfangle, Vector(0, -1)).map(Vector(wing_ratio, -1)),
+            Vector(0, -1)
+        ]
+    for i in range(1, 4) :
+        # symmetrical other half
+        points.append(Matrix.scale((-1, 1)).map(points[4 - i]))
+    #end for
+    points.append(Vector(0, 0))
+    # sys.stderr.write("arrowing points = %s\n" % repr(points)) # debug
+    pattern_dimensions = \
+        Vector \
+          (
+            x = 4 * points[2].x,
+            y = 2
+          )
+    shape = Path \
+      (
+            (Path.MoveTo(points[0]),)
+        +
+            tuple(Path.LineTo(v) for v in points[1:])
+      )
+    tile = qah.ImageSurface.create \
+      (
+        format = CAIRO.FORMAT_RGB24,
+        dimensions = round(pattern_dimensions * pattern_res)
+      )
+    (qah.Context(tile)
+        .set_matrix((Rect.from_dimensions(pattern_dimensions) - Vector(0, pattern_dimensions.y)).transform_to(Rect.from_dimensions(tile.dimensions)))
+        .set_source_colour(Colour.grey(1))
+        .set_operator(CAIRO.OPERATOR_SOURCE)
+        .paint()
+        .set_source_colour(Colour.grey(0))
+        .new_path()
+        .append_path(shape)
+        .append_path(shape.transform(Matrix.rotate(180 * deg, points[2])))
+        .append_path(shape.transform(Matrix.rotate(180 * deg, points[0])))
+        .append_path(shape.transform(Matrix.rotate(180 * deg, points[2]) * Matrix.rotate(180 * deg, points[4])))
+        .append_path(shape.transform(Matrix.rotate(180 * deg, points[4])))
+        .append_path(shape.transform(Matrix.rotate(180 * deg, points[2]) * Matrix.rotate(180 * deg, points[0])))
+        .append_path(shape.transform(Matrix.translate((pattern_dimensions.x, 0))))
+        .append_path(shape.transform(Matrix.translate((pattern_dimensions.x, 0)) * Matrix.rotate(180 * deg, points[0])))
+        .append_path(shape.transform(Matrix.translate(pattern_dimensions * Vector(1, -1)) * Matrix.rotate(180 * deg, points[0])))
+        .fill()
+    )
+    tile.flush()
+    return \
+        qah.Pattern.create_for_surface(tile).set_extend(CAIRO.EXTEND_REPEAT)
+#end arrowing
+
+#+
+# Mainline
+#-
+
 figure_bounds = Vector(400, 400)
 margins = Vector(20, 20)
 pattern_res = 50
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
-    dimensions = Vector(2, 1) * (figure_bounds + margins) + margins
+    dimensions = Vector(3, 2) * (figure_bounds + margins) + margins
   )
 ctx = \
     (qah.Context(pix)
@@ -37,126 +160,33 @@ ctx = \
         .set_source_colour(Colour.grey(0))
     )
 
-# construct triwing pattern
-curve_factor = .7
-tilt = 30 * deg
-c0 = Matrix.rotate(30 * deg).map(Vector(1, 0))
-c3 = Matrix.rotate(- 120 * deg).map(c0)
-c1 = c0 + (c3 - c0).rotate(tilt) * curve_factor
-c2 = c3 + (c0 - c3).rotate(tilt) * curve_factor
-# actually centre part should be thinner, but that would require another curve segment
-
-elts = [Path.MoveTo(c0)]
-tips = []
-for i in range(3) :
-    mat = Matrix.rotate(- i / 3 * qah.circle)
-    tips.append(mat.map(c0))
-    elts.append(Path.CurveTo(c1, c2, c3).transform(mat))
-#end for
-elts.append(Path.Close())
-triwing = Path(elts)
-triwing_bounds = \
-    Rect.from_corners \
-      (
-        (min(p.x for p in tips), min(p.y for p in tips)),
-        (max(p.x for p in tips), max(p.y for p in tips)),
-      )
-# sys.stderr.write("triwing bounds = %s\n" % repr(triwing_bounds)) # debug
-triwing_pattern_dimensions = \
-    Vector \
-      (
-        x = triwing_bounds.width,
-        y = tips[2].y - 2 * tips[1].y + tips[0].y
-      )
-# sys.stderr.write("triwing bounds = %s, pat dimensions = %s\n" % (repr(triwing_bounds), repr(triwing_pattern_dimensions))) # debug
-
-tile = qah.ImageSurface.create \
-  (
-    format = CAIRO.FORMAT_RGB24,
-    dimensions = round(triwing_pattern_dimensions * pattern_res)
-  )
-(qah.Context(tile)
-    .set_matrix(Matrix.scale(pattern_res) * Matrix.translate(- triwing_bounds.topleft))
-    .set_source_colour(Colour.grey(1))
-    .set_operator(CAIRO.OPERATOR_SOURCE)
-    .paint()
-    .set_source_colour(Colour.grey(0))
-    .new_path()
-    .append_path(triwing)
-    .append_path(triwing.transform(Matrix.rotate(120 * deg, tips[0])))
-    .append_path(triwing.transform(Matrix.rotate(240 * deg, tips[0])))
-    .append_path(triwing.transform(Matrix.rotate(120 * deg, tips[2])))
-    .append_path(triwing.transform(Matrix.translate(tips[1] - tips[2])))
-    .fill()
-)
-tile.flush()
-triwing_pat = qah.Pattern.create_for_surface(tile).set_extend(CAIRO.EXTEND_REPEAT)
-
-# construct arrowing pattern
-wing_ratio = .67 # relative length of pointy part to total length
-halfangle = math.acos(0.5 / math.hypot(wing_ratio, 1 - wing_ratio)) - math.atan2(1 - wing_ratio, wing_ratio)
-# halfangle tied to wing_ratio so that gaps between shapes have same shape as shape itself
-
-points = \
+triwing_params = \
     [
-        Vector(0, 0),
-        Matrix.rotate(halfangle).map(Vector(0, - wing_ratio)),
-        Vector(.5, -.5),
-        Matrix.rotate(halfangle, Vector(0, -1)).map(Vector(wing_ratio, -1)),
-        Vector(0, -1)
+        {"curve_factor" : 0.7, "tilt" : 30 * deg},
+        {"curve_factor" : 0.9, "tilt" : - 20 * deg},
+        {"curve_factor" : 0.3, "tilt" : 30 * deg},
     ]
-for i in range(1, 4) :
-    # symmetrical other half
-    points.append(Matrix.scale((-1, 1)).map(points[4 - i]))
+arrowing_params = \
+    [
+        {"wing_ratio" : .67},
+        {"wing_ratio" : .55},
+        {"wing_ratio" : .75},
+    ]
+for i in range(3) :
+    params = dict(triwing_params[i])
+    params["pattern_res"] = pattern_res
+    triwing_pat = triwing(**params)
+    params = dict(arrowing_params[i])
+    params["pattern_res"] = pattern_res * 1.5
+    arrowing_pat = arrowing(**params)
+    (ctx
+        .set_source(triwing_pat)
+        .new_path()
+        .rectangle(Rect.from_dimensions(figure_bounds) + Vector(i, 0) * (figure_bounds + margins) + margins)
+        .fill()
+        .set_source(arrowing_pat)
+        .rectangle(Rect.from_dimensions(figure_bounds) + Vector(i, 1) * (figure_bounds + margins) + margins)
+        .fill()
+    )
 #end for
-points.append(Vector(0, 0))
-# sys.stderr.write("arrowing points = %s\n" % repr(points)) # debug
-arrowing_dimensions = \
-    Vector \
-      (
-        x = 4 * points[2].x,
-        y = 2
-      )
-arrowing = Path \
-  (
-        (Path.MoveTo(points[0]),)
-    +
-        tuple(Path.LineTo(v) for v in points[1:])
-  )
-tile = qah.ImageSurface.create \
-  (
-    format = CAIRO.FORMAT_RGB24,
-    dimensions = round(arrowing_dimensions * pattern_res * 1.5)
-  )
-(qah.Context(tile)
-    .set_matrix((Rect.from_dimensions(arrowing_dimensions) - Vector(0, arrowing_dimensions.y)).transform_to(Rect.from_dimensions(tile.dimensions)))
-    .set_source_colour(Colour.grey(1))
-    .set_operator(CAIRO.OPERATOR_SOURCE)
-    .paint()
-    .set_source_colour(Colour.grey(0))
-    .new_path()
-    .append_path(arrowing)
-    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[2])))
-    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[0])))
-    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[2]) * Matrix.rotate(180 * deg, points[4])))
-    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[4])))
-    .append_path(arrowing.transform(Matrix.rotate(180 * deg, points[2]) * Matrix.rotate(180 * deg, points[0])))
-    .append_path(arrowing.transform(Matrix.translate((arrowing_dimensions.x, 0))))
-    .append_path(arrowing.transform(Matrix.translate((arrowing_dimensions.x, 0)) * Matrix.rotate(180 * deg, points[0])))
-    .append_path(arrowing.transform(Matrix.translate(arrowing_dimensions * Vector(1, -1)) * Matrix.rotate(180 * deg, points[0])))
-    .fill()
-)
-tile.flush()
-arrowing_pat = qah.Pattern.create_for_surface(tile).set_extend(CAIRO.EXTEND_REPEAT)
-
-# show the two patterns side by side
-(ctx
-    .set_source(triwing_pat)
-    .new_path()
-    .rectangle(Rect.from_dimensions(figure_bounds) + margins)
-    .fill()
-    .set_source(arrowing_pat)
-    .rectangle(Rect.from_dimensions(figure_bounds) + Vector(1, 0) * (figure_bounds + margins) + margins)
-    .fill()
-)
 pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
