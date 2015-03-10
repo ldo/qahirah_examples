@@ -28,17 +28,16 @@ from qahirah import \
 def triwing(tilt, curve_factor, pattern_res) :
     "generates a image pattern with three curvy arms."
     c0 = Vector(1, 0).rotate(30 * deg)
-    c3 = c0.rotate(- 120 * deg)
-    c1 = c0 + (c3 - c0).rotate(tilt) * curve_factor
-    c2 = c3 + (c0 - c3).rotate(tilt) * curve_factor
-    # actually centre part should be thinner, but that would require another curve segment
-
     elts = [Path.MoveTo(c0)]
     tips = []
     for i in range(3) :
-        mat = Matrix.rotate(- i / 3 * qah.circle)
-        tips.append(mat.map(c0))
-        elts.append(Path.CurveTo(c1, c2, c3).transform(mat))
+        tips.append(c0)
+        c3 = c0.rotate(- 120 * deg)
+        c1 = c0 + (c3 - c0).rotate(tilt) * curve_factor
+        c2 = c3 + (c0 - c3).rotate(tilt) * curve_factor
+        elts.append(Path.CurveTo(c1, c2, c3))
+        # actually centre part should be thinner, but that would require another curve segment
+        c0 = c3
     #end for
     elts.append(Path.Close())
     shape = Path(elts)
@@ -70,10 +69,13 @@ def triwing(tilt, curve_factor, pattern_res) :
         .set_source_colour(Colour.grey(0))
         .new_path()
         .append_path(shape)
-        .append_path(shape.transform(Matrix.rotate(120 * deg, tips[0])))
-        .append_path(shape.transform(Matrix.rotate(240 * deg, tips[0])))
-        .append_path(shape.transform(Matrix.rotate(120 * deg, tips[2])))
+        # need enough copies to cover neighbouring spots under all possible pattern parameters
+        .append_path(shape.transform(Matrix.translate(tips[2] - tips[1])))
+        .append_path(shape.transform(Matrix.translate(tips[0] - tips[1])))
+        .append_path(shape.transform(Matrix.translate((+ pattern_dimensions.x, 0))))
+        .append_path(shape.transform(Matrix.translate((- pattern_dimensions.x, 0))))
         .append_path(shape.transform(Matrix.translate(tips[1] - tips[2])))
+        .append_path(shape.transform(Matrix.translate(tips[1] - tips[0])))
         .fill()
     )
     tile.flush()
@@ -163,7 +165,8 @@ ctx = \
 triwing_params = \
     [
         {"curve_factor" : 0.7, "tilt" : 30 * deg},
-        {"curve_factor" : 0.9, "tilt" : - 20 * deg},
+        {"curve_factor" : 0.9, "tilt" : - 60 * deg},
+        #{"curve_factor" : 0.9, "tilt" : 60 * deg},
         {"curve_factor" : 0.3, "tilt" : 30 * deg},
     ]
 arrowing_params = \
