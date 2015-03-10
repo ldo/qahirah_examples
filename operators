@@ -14,7 +14,7 @@ import os
 import math
 import qahirah as qah
 CAIRO = qah.CAIRO
-Vec = qah.Vector
+Vector = qah.Vector
 Rect = qah.Rect
 
 operator_names = \
@@ -59,16 +59,16 @@ unbounded = \
 nr_cols = math.ceil(math.sqrt(len(operator_names)))
 nr_rows = math.ceil(len(operator_names) / nr_cols)
 
-rect_size = Vec(120, 90)
-rect_1_pos = Vec(0, 0)
-rect_2_pos = Vec(40, 30)
-margin = Vec(10, 30)
+rect_size = Vector(120, 90)
+rect_1_pos = Vector(0, 0)
+rect_2_pos = Vector(40, 30)
+margin = Vector(10, 30)
 top_extra = 40
 draw_bounds = Rect.from_dimensions(rect_size + rect_2_pos + 2 * margin) - margin
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_ARGB32,
-    dimensions = Vec(nr_cols, nr_rows) * draw_bounds.dimensions + Vec(0, top_extra)
+    dimensions = Vector(nr_cols, nr_rows) * draw_bounds.dimensions + Vector(0, top_extra)
   )
 sys.stderr.write("(rows, cols) = (%d, %d), pix size = (%d, %d)\n" % (nr_rows, nr_cols, pix.width, pix.height)) # debug
 g = qah.Context(pix)
@@ -94,11 +94,11 @@ for op_name in operator_names :
         (
             draw_bounds
         +
-            Vec(col, row) * draw_bounds.dimensions
+            Vector(col, row) * draw_bounds.dimensions
         +
             margin
         +
-            Vec(0, top_extra)
+            Vector(0, top_extra)
         )
     g.matrix = draw_bounds.transform_to(dest_rect)
     g.reset_clip()

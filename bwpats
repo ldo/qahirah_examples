@@ -17,7 +17,7 @@ import array
 import qahirah as qah
 CAIRO = qah.CAIRO
 deg = qah.deg
-Vec = qah.Vector
+Vector = qah.Vector
 Matrix = qah.Matrix
 Rect = qah.Rect
 Colour = qah.Colour
@@ -398,7 +398,7 @@ nr_rows = 4
 saturation = 0.5
 intensity = 0.75
 pat1 = \
-    (qah.Pattern.create_linear(Vec(0, 0), Vec(0, 1))
+    (qah.Pattern.create_linear(Vector(0, 0), Vector(0, 1))
         .add_colour_stop(0, Colour.from_hsva((.15, saturation, intensity)))
         .add_colour_stop(1, Colour.from_hsva((.65, saturation, intensity)))
     )
@@ -415,12 +415,12 @@ pat2 = qah.Pattern.create_linear \
   )
   # example of gradient pattern definition by including colour stops in create call
 
-margins = Vec(16, 16)
-cell_size = Vec(64, 64)
+margins = Vector(16, 16)
+cell_size = Vector(64, 64)
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_ARGB32,
-    dimensions = (cell_size + margins) * Vec(len(bwpats), nr_rows) + margins
+    dimensions = (cell_size + margins) * Vector(len(bwpats), nr_rows) + margins
   )
 g = qah.Context(pix)
 g.operator = CAIRO.OPERATOR_SOURCE
@@ -430,7 +430,7 @@ col = 0
 for i in range(len(bwpats)) :
     pat = get_pat(i)
     pat.matrix = Rect(0, 0, 2, 2).transform_to(Rect(0, 0, 1, 1))
-    cell = Rect.from_dimensions(cell_size) + Vec(col, 0) * (cell_size + margins) + margins
+    cell = Rect.from_dimensions(cell_size) + Vector(col, 0) * (cell_size + margins) + margins
     g.new_path()
     g.rectangle(cell)
     g.operator = CAIRO.OPERATOR_SOURCE
@@ -443,7 +443,7 @@ for i in range(len(bwpats)) :
     g.fill()
     g.operator = CAIRO.OPERATOR_SOURCE
     for flip in (False, True) :
-        cell += Vec(0, 1) * (cell_size + margins)
+        cell += Vector(0, 1) * (cell_size + margins)
         pat_matrix = cell.transform_to(Rect(0, 0, 1, 1))
         pat1.matrix = pat_matrix
         pat2.matrix = pat_matrix
@@ -457,7 +457,7 @@ for i in range(len(bwpats)) :
         g.reset_clip()
         pat1, pat2 = pat2, pat1
     #end for
-    cell += Vec(0, 1) * (cell_size + margins)
+    cell += Vector(0, 1) * (cell_size + margins)
     g.new_path()
     g.rectangle(cell)
     g.operator = CAIRO.OPERATOR_SOURCE
