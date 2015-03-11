@@ -29,6 +29,7 @@ trace_colour = Colour.from_hsva((.17, 1, 1))
 trace_fade_colour = trace_colour.replace_alpha(0)
 trace_width_angle = 25 * deg
 trace_pos_angle = 105 * deg
+bogey_size = scope_radius / 32
 
 pix = qah.ImageSurface.create \
   (
@@ -81,6 +82,34 @@ trace_pat = \
         .set_corner_colour(3, trace_colour)
         .end_patch()
     )
+bogey_pat = qah.Pattern.create_radial \
+  (
+    c0 = (0, 0),
+    r0 = 0,
+    c1 = (0, 0),
+    r1 = 1,
+    colour_stops =
+        (
+            (0, trace_colour),
+            (0.5, trace_colour),
+            (1, trace_fade_colour),
+        ),
+  )
+for \
+    bearing, range \
+in \
+    (
+        (75, .75),
+        (90, .5),
+        (95, .75),
+    ) \
+:
+    bogey_pos = Vector(0, - range * scope_radius).rotate(bearing * deg)
+    bogey_pat.matrix = (Matrix.translate(bogey_pos) * Matrix.scale(bogey_size)).inv()
+    g.set_source(bogey_pat)
+    g.arc(centre = bogey_pos, radius = bogey_size, angle1 = 0, angle2 = qah.circle)
+    g.fill()
+#end for
 g.transform(Matrix.rotate(trace_pos_angle))
 (g
     .move_to((0, 0))
