@@ -22,9 +22,14 @@ from qahirah import \
 
 random.seed(999) # want same sequence every time
 pat_size = 256
-patbytes = array.array("B", (0,) * (4 * pat_size * pat_size))
+patbytes = array.array("I", (0,) * (pat_size * pat_size))
+  # compute by longwords rather than bytes, so result is endian-independent
 for i in range(len(patbytes)) :
-    patbytes[i] = random.randrange(256)
+    a = 255 # ignored
+    r = random.randrange(256)
+    g = random.randrange(256)
+    b = random.randrange(256)
+    patbytes[i] = a << 24 | r << 16 | g << 8 | b
 #end i
 noise_pat = \
     (qah.Pattern.create_for_surface
