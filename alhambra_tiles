@@ -176,11 +176,9 @@ arrowing_params = \
         {"wing_ratio" : .75},
     ]
 for i in range(3) :
-    params = dict(triwing_params[i])
-    params["pattern_res"] = pattern_res
+    params = dict(triwing_params[i], pattern_res = pattern_res)
     triwing_pat = triwing(**params)
-    params = dict(arrowing_params[i])
-    params["pattern_res"] = pattern_res * 1.5
+    params = dict(arrowing_params[i], pattern_res = pattern_res * 1.5)
     arrowing_pat = arrowing(**params)
     (ctx
         .set_source(triwing_pat)
