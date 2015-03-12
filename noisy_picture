@@ -24,6 +24,7 @@ random.seed(999) # want same sequence every time
 pat_size = 256
 patbytes = array.array("I", (0,) * (pat_size * pat_size))
   # compute by longwords rather than bytes, so result is endian-independent
+assert patbytes.itemsize == 4 # in case of any doubt--docs seem a little unclear on this point
 for i in range(len(patbytes)) :
     a = 255 # ignored
     r = random.randrange(256)
