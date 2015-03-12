@@ -1,0 +1,79 @@
+#!/usr/bin/python3
+#+
+# Test of the repeat behaviour of gradient patterns.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
+
+patscale = 8
+linear_params = \
+    [
+        {"p0" : Vector(0, 0), "p1" : Vector(patscale, patscale)},
+        {"p0" : Vector(0, 0), "p1" : Vector(patscale, 0)},
+        {"p0" : Vector(0, 0), "p1" : Vector(0, patscale)},
+        {"p0" : Vector(0, 0), "p1" : Vector(- patscale / 2, patscale)},
+    ]
+radial_params = \
+    [
+        {"c0" : Vector(0, 0), "r0" : 0, "c1" : Vector(0, 0), "r1" : patscale},
+        {"c0" : Vector(0, 0), "r0" : 0, "c1" : Vector(patscale, 0), "r1" : patscale},
+        {"c0" : Vector(0, 0), "r0" : 0, "c1" : Vector(patscale, 0), "r1" : patscale + 1},
+        {"c0" : Vector(0, 0), "r0" : 0, "c1" : Vector(patscale, patscale), "r1" : patscale / 4},
+    ]
+colour_stops = \
+    (
+        (0, Colour.from_hsva((0.90, 0.7, 0.5))),
+        (1, Colour.from_hsva((0.15, 0.7, 0.9))),
+    )
+
+figure_size = Vector(400, 400)
+margins = Vector(10, 10)
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_ARGB32,
+    dimensions =
+            (figure_size + margins) * Vector(max(len(linear_params), len(radial_params)), 2)
+        +
+            margins
+  )
+ctx = \
+    (qah.Context(pix)
+        .set_source_colour(Colour.grey(0, 0))
+        .set_operator(CAIRO.OPERATOR_SOURCE)
+        .paint()
+        .set_operator(CAIRO.OPERATOR_OVER)
+    )
+for \
+    row, create, paramslist \
+in \
+    (
+        (0, qah.Pattern.create_linear, linear_params),
+        (1, qah.Pattern.create_radial, radial_params),
+    ) \
+:
+    for col, params in enumerate(paramslist) :
+        pat = create(**dict(params, colour_stops = colour_stops))
+          # assumes create is a staticmethod, not a classmethod!
+        pat.matrix = Matrix.scale(patscale * 4 / figure_size.x)
+        pat.extend = CAIRO.EXTEND_REPEAT
+        ctx.matrix = Matrix.translate(Vector(col, row) * (figure_size + margins) + margins)
+        ctx.source = pat
+        ctx.rectangle(Rect.from_dimensions(figure_size))
+        ctx.fill()
+    #end for
+#end for
+
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
