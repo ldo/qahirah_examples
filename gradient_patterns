@@ -67,7 +67,6 @@ in \
 :
     for col, params in enumerate(paramslist) :
         pat = create(**dict(params, colour_stops = colour_stops))
-          # assumes create is a staticmethod, not a classmethod!
         pat.matrix = Matrix.scale(patscale * 4 / figure_size.x)
         pat.extend = CAIRO.EXTEND_REPEAT
         ctx.matrix = Matrix.translate(Vector(col, row) * (figure_size + margins) + margins)
