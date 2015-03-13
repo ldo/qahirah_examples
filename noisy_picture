@@ -49,7 +49,7 @@ noise_pat = \
 
 aspect = Vector(4, 3)
 res_scale = 192
-noise_strength = 1 # reduce if you like
+noise_strength = 0.5 # feel free to play with this
 circle_radius = 1.4
 grid_unit = circle_radius / 6
 src = qah.ImageSurface.create \
@@ -112,15 +112,8 @@ dst = qah.ImageSurface.create \
     .set_operator(CAIRO.OPERATOR_SOURCE)
     .paint()
     .set_source(noise_pat)
-    # I really want a bitwise-xor effect, but OPERATOR_XOR doesn’t give me
-    # that. OPERATOR_MULTIPLY is closer to what I want, but is less effective
-    # in darker areas, while OPERATOR_SCREEN is the complement of that, less
-    # effective in lighter areas. So I do both, fading them with paint_with_alpha
-    # to avoid having too strong an effect.
-    .set_operator(CAIRO.OPERATOR_MULTIPLY)
-    .paint_with_alpha(noise_strength / 2)
-    .set_operator(CAIRO.OPERATOR_SCREEN)
-    .paint_with_alpha(noise_strength / 2)
+    .set_operator(CAIRO.OPERATOR_DIFFERENCE) # closest I can get to a bitwise-xor effect
+    .paint_with_alpha(noise_strength)
 )
 dst \
     .flush() \
