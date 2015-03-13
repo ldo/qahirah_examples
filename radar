@@ -36,7 +36,7 @@ pix = qah.ImageSurface.create \
     format = CAIRO.FORMAT_ARGB32,
     dimensions = Vector(2, 2) * scope_radius
   )
-g = qah.Context(pix).set_matrix(Matrix.translate(Vector(1, 1) * scope_radius))
+g = qah.Context.create(pix).set_matrix(Matrix.translate(Vector(1, 1) * scope_radius))
 (g
     .set_source_colour(Colour.grey(0, 0))
     .set_operator(CAIRO.OPERATOR_SOURCE)

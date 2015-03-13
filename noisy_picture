@@ -58,7 +58,7 @@ src = qah.ImageSurface.create \
     dimensions = aspect * res_scale
   )
 ctx = \
-    (qah.Context(src)
+    (qah.Context.create(src)
         .set_matrix(Matrix.scale(res_scale) * Matrix.translate(aspect / 2))
         .set_source_colour(Colour.grey(.5))
         .set_operator(CAIRO.OPERATOR_SOURCE)
@@ -104,7 +104,7 @@ dst = qah.ImageSurface.create \
     format = CAIRO.FORMAT_RGB24,
     dimensions = src.dimensions
   )
-(qah.Context(dst)
+(qah.Context.create(dst)
     .set_source
       (
         qah.Pattern.create_for_surface(src)

@@ -51,7 +51,7 @@ pix = qah.ImageSurface.create \
             margins
   )
 ctx = \
-    (qah.Context(pix)
+    (qah.Context.create(pix)
         .set_source_colour(Colour.grey(0, 0))
         .set_operator(CAIRO.OPERATOR_SOURCE)
         .paint()
