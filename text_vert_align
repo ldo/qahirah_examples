@@ -30,7 +30,7 @@ texts = \
     )
 bg_colour = Colour.grey(1)
 main_colour = Colour.grey(0)
-dim_colour = Colour.grey(0.7)
+dim_colour = Colour.grey(0.9)
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
