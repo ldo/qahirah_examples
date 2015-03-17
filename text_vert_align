@@ -1,0 +1,75 @@
+#!/usr/bin/python3
+#+
+# Test of calculations for vertically-aligning text: comparison of
+# alignment based on overall font metrics, versus specific text metrics.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Rect, \
+    Vector
+
+box_dimensions = Vector(300, 100)
+margins = Vector(20, 20)
+texts = \
+    (
+        "gamey", # descenders only
+        "ballot", # ascenders only
+        "battery", # ascenders and descenders
+        "woman", # neither
+        "WXM", # full height
+    )
+bg_colour = Colour.grey(1)
+main_colour = Colour.grey(0)
+dim_colour = Colour.grey(0.7)
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = (box_dimensions + margins) * Vector(2, len(texts)) + margins
+  )
+ctx = \
+    (qah.Context.create(pix)
+        .set_operator(CAIRO.OPERATOR_SOURCE)
+        .set_source_colour(bg_colour)
+        .paint()
+        .set_font_size(60)
+    )
+font_extents = ctx.font_extents
+font_mid_y = (font_extents.ascent - font_extents.descent) / 2
+for i, text in enumerate(texts) :
+    topleft = (box_dimensions + margins) * Vector(0, i) + margins
+    ctx.set_source_colour(dim_colour)
+    ctx.move_to(topleft + Vector(0, box_dimensions.y / 2))
+    ctx.rel_line_to((box_dimensions.x, 0))
+    ctx.stroke()
+    ctx.set_source_colour(main_colour)
+    ctx.move_to(topleft + Vector(0, font_mid_y) + Vector(0, box_dimensions.y / 2))
+    ctx.show_text(text)
+    ctx.rectangle(Rect.from_dimensions(box_dimensions) + topleft)
+    ctx.stroke()
+    topleft = (box_dimensions + margins) * Vector(1, i) + margins
+    ctx.set_source_colour(dim_colour)
+    ctx.move_to(topleft + Vector(0, box_dimensions.y / 2))
+    ctx.rel_line_to((box_dimensions.x, 0))
+    ctx.stroke()
+    ctx.set_source_colour(main_colour)
+    text_extents = ctx.text_extents(text)
+    text_mid_y = (- 2 * text_extents.y_bearing - text_extents.height) / 2
+    ctx.move_to(topleft + Vector(0, text_mid_y) + Vector(0, box_dimensions.y / 2))
+    ctx.show_text(text)
+    ctx.rectangle(Rect.from_dimensions(box_dimensions) + topleft)
+    ctx.stroke()
+#end for
+
+pix \
+    .flush() \
+    .write_to_png("%s.png" % os.path.basename(sys.argv[0]))
