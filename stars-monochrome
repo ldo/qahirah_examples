@@ -1,0 +1,55 @@
+#!/usr/bin/python3
+#+
+# A random scattering of stars against a black background.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import array
+import random
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
+
+random.seed(999) # want same sequence every time
+pat_size = 1024
+patbytes = array.array("B", (0,) * (pat_size * pat_size))
+for i in range(1000) :
+    pos = round(Vector(random.random(), random.random()) * pat_size)
+    brightness = random.random() ** 3 # dimmer ones are more common
+    patbytes[pos.x + pos.y * pat_size] = round(brightness * 255)
+#end for
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = (pat_size, pat_size)
+  )
+(qah.Context.create(pix)
+    .set_source_colour(Colour.grey(0))
+    .set_operator(CAIRO.OPERATOR_SOURCE)
+    .paint()
+    .set_source_colour(Colour.grey(1))
+    .mask
+      (
+        qah.Pattern.create_for_surface
+          (
+            qah.ImageSurface.create_for_array
+              (
+                arr = patbytes,
+                format = CAIRO.FORMAT_A8,
+                dimensions = (pat_size, pat_size),
+                stride = pat_size
+              )
+          )
+      )
+)
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))

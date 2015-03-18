@@ -1,0 +1,59 @@
+#!/usr/bin/python3
+#+
+# A random scattering of coloured stars against a black background.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import array
+import random
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
+
+colours = \
+    ( # stars cannot be just any colour, mainly red/orange/yellow and blue-white
+        Colour.from_hsva((0.1, 1, 1)),
+        Colour.from_hsva((0.08, 1, 1)),
+        Colour.from_hsva((0.16, 1, 1)),
+        Colour.from_hsva((0.16, 0.5, 1)),
+        Colour.from_hsva((0.16, 0.25, 1)),
+        Colour.from_hsva((0.57, 0.25, 1)),
+        Colour.from_hsva((0.57, 0.4, 1)),
+    )
+
+random.seed(999) # want same sequence every time
+pat_size = 1024
+patbytes = array.array("I", (0xff000000,) * (pat_size * pat_size))
+for i in range(1000) :
+    pos = round(Vector(random.random(), random.random()) * (pat_size - 1))
+    brightness = random.random() ** 3 # dimmer ones are more common
+    colour = random.choice(colours)
+    patbytes[pos.x + pos.y * pat_size] = \
+        (
+            255 << 24 # alpha -- ignored
+        |
+            round(brightness * colour.r * 255) << 16
+        |
+            round(brightness * colour.g * 255) << 8
+        |
+            round(brightness * colour.b * 255)
+        )
+    # sys.stderr.write("patbytes(%d, %d) = %#08x\n" % (pos.x, pos.y, patbytes[pos.x + pos.y * pat_size])) # debug
+#end for
+qah.ImageSurface.create_for_array \
+  (
+    arr = patbytes,
+    format = CAIRO.FORMAT_ARGB32,
+    dimensions = (pat_size, pat_size),
+    stride = pat_size * 4
+  ).flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
