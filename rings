@@ -25,7 +25,7 @@ def make_rings_pat(lo, hi) :
             c0 = (0, 0),
             r0 = 0,
             c1 = (0, 0),
-            r1 = 16,
+            r1 = 8,
             colour_stops =
                 (
                     (0, Colour.grey(hi)),
