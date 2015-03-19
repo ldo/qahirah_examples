@@ -1,0 +1,60 @@
+#!/usr/bin/python3
+#+
+# Interfering rings pattern.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+
+def make_rings_pat(lo, hi) :
+    "constructs the basic rings pattern oscillating between the specified shades of grey."
+    return \
+        qah.Pattern.create_radial \
+          (
+            c0 = (0, 0),
+            r0 = 0,
+            c1 = (0, 0),
+            r1 = 16,
+            colour_stops =
+                (
+                    (0, Colour.grey(hi)),
+                    (0.5, Colour.grey(lo)),
+                    (1, Colour.grey(hi)),
+                )
+          ).set_extend(CAIRO.EXTEND_REPEAT)
+#end make_rings_pat
+
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = (1280, 720)
+  )
+ctx = qah.Context.create(pix)
+ctx.operator = CAIRO.OPERATOR_SOURCE
+for pos, lo, hi in \
+    (
+        (Vector(.5, .5), 0.7, 1),
+        (Vector(.2, .2), 0.3, .75),
+        (Vector(.1, .8), 0.5, 1),
+        (Vector(.85, .25), 0.75, 1),
+        (Vector(.75, .75), 0.75, 1),
+    ) \
+:
+    ctx.matrix = Matrix.translate(pos * pix.dimensions)
+    ctx.source = make_rings_pat(lo, hi)
+    ctx.paint()
+    ctx.operator = CAIRO.OPERATOR_MULTIPLY
+#end for
+
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
