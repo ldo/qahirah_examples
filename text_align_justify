@@ -1,0 +1,127 @@
+#!/usr/bin/python3
+#+
+# Demonstration of basic (non-contextual, left-to-right) text layout,
+# with horizontal alignment and justification.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Glyph, \
+    Vector
+
+def align_text(g, text_lines, line_width, align) :
+    "renders the sequence of text_lines horizontally-aligned within line_width according" \
+    " to align: 0 for left-aligned, 0.5 for centred, 1.0 for right-aligned; in-between" \
+    " values also allowed."
+    font_extents = g.font_extents
+    for line in text_lines :
+        save_pos = g.current_point
+        if align != 0 :
+            text_width = g.text_extents(line).width
+            g.rel_move_to(((line_width - text_width) * align, 0))
+        #end if
+        g.show_text(line)
+        g.move_to(save_pos + Vector(0, font_extents.height))
+    #end for
+#end align_text
+
+def justify_text(g, text_lines, line_width, space_extra) :
+    "renders the sequence of text_lines with full justification within line_width." \
+    " space_extra is the relative amount of extra spacing to give to space glyphs; 0" \
+    " means to treat them the same as non-space glyphs."
+    space_glyph = g.scaled_font.text_to_glyphs((0, 0), " ", cluster_mapping = False)[0][0].index
+    #sys.stderr.write("space_glyph = %d\n" % space_glyph) # debug
+    font_extents = g.font_extents
+    for line in text_lines :
+        save_pos = g.current_point
+        glyphs = g.scaled_font.text_to_glyphs(save_pos, line, cluster_mapping = False)[0]
+        nr_spaces = len(tuple(g for g in glyphs if g.index == space_glyph))
+        glyph_extents = g.glyph_extents(glyphs)
+        glyph_adjust = \
+            (
+                (line_width - glyph_extents.width)
+            /
+                (len(glyphs) + nr_spaces * space_extra - 1)
+            )
+          # subtract 1 because no adjustment for first char on line, count of nr_spaces
+          # assumes none are at beginning or end of line!
+        new_glyphs = []
+        prev_pos_x = 0
+        prev_adj_pos_x = 0
+        for i, glyph in enumerate(glyphs) :
+            if i == 0 :
+                adjust = 0
+            elif glyph.index == space_glyph :
+                adjust = glyph_adjust * (1 + space_extra)
+            else :
+                adjust = glyph_adjust
+            #end if
+            adj_pos_x = glyph.pos.x - prev_pos_x + prev_adj_pos_x + adjust
+            new_glyphs.append \
+              (
+                Glyph(index = glyph.index, pos = (adj_pos_x, glyph.pos.y))
+              )
+            prev_pos_x = glyph.pos.x
+            prev_adj_pos_x = adj_pos_x
+        #end for
+        g.show_glyphs(new_glyphs)
+        g.move_to(save_pos + Vector(0, font_extents.height))
+    #end for
+#end justify_text
+
+text_lines = \
+    (
+        "Lorem ipsum dolor sit amet, consectetur",
+        "adipiscing elit, sed do eiusmod tempor",
+        "incididunt ut labore et dolore magna aliqua.",
+        "Ut enim ad minim veniam, quis nostrud",
+        "exercitation ullamco laboris nisi ut aliquip",
+        "ex ea commodo consequat. Duis aute irure dolor",
+        "in reprehenderit in voluptate velit esse cillum",
+        "dolore eu fugiat nulla pariatur. Excepteur sint",
+        "occaecat cupidatat non proident, sunt in culpa",
+        "qui officia deserunt mollit anim id est laborum.",
+    )
+text_size = 18
+height_fudge = 1.3
+line_width = text_size * 25
+margin = 30
+
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = round(Vector
+      (
+        line_width * 2 + margin * 3,
+        text_size * (len(text_lines) * 3 + 1) * height_fudge + margin * 4
+      ))
+  )
+g = qah.Context.create(pix)
+g.set_source_colour(Colour.grey(1)).set_operator(CAIRO.OPERATOR_SOURCE).paint()
+g.set_source_colour(Colour.grey(0))
+g.font_face = qah.FontFace.create_for_pattern("century schoolbook")
+g.set_font_size(text_size)
+font_extents = g.font_extents
+g.move_to((margin, font_extents.ascent - font_extents.height + margin))
+for align in (0, 0.5, 1.0) :
+    g.rel_move_to((0, font_extents.height))
+    align_text(g, text_lines, line_width, align)
+#end for
+g.move_to((2 * margin + line_width, font_extents.ascent - font_extents.height + margin))
+for space_extra in (0, 3, 10) :
+    g.rel_move_to((0, font_extents.height))
+    justify_text(g, text_lines, line_width, space_extra)
+#end for
+
+pix \
+    .flush() \
+    .write_to_png("%s.png" % os.path.basename(sys.argv[0]))
