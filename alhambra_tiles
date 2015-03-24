@@ -26,21 +26,20 @@ from qahirah import \
 #-
 
 def triwing(tilt, curve_factor, pattern_res) :
-    "generates a image pattern with three curvy arms."
+    "generates an image pattern with three curvy arms."
     c0 = Vector(1, 0).rotate(30 * deg)
-    elts = [Path.MoveTo(c0)]
+    elts = [Path.Point(c0, False)]
     tips = []
     for i in range(3) :
         tips.append(c0)
         c3 = c0.rotate(- 120 * deg)
         c1 = c0 + (c3 - c0).rotate(tilt) * curve_factor
         c2 = c3 + (c0 - c3).rotate(tilt) * curve_factor
-        elts.append(Path.CurveTo(c1, c2, c3))
+        elts.extend([Path.Point(c1, True), Path.Point(c2, True), Path.Point(c3, False)])
         # actually centre part should be thinner, but that would require another curve segment
         c0 = c3
     #end for
-    elts.append(Path.Close())
-    shape = Path.from_elements(elts)
+    shape = Path([Path.Segment(elts, True)])
     path_bounds = \
         Rect.from_corners \
           (
@@ -108,12 +107,7 @@ def arrowing(wing_ratio, pattern_res) :
             x = 4 * points[2].x,
             y = 2
           )
-    shape = Path.from_elements \
-      (
-            (Path.MoveTo(points[0]),)
-        +
-            tuple(Path.LineTo(v) for v in points[1:])
-      )
+    shape = Path([Path.Segment((Path.Point(v, False) for v in points), True)])
     tile = qah.ImageSurface.create \
       (
         format = CAIRO.FORMAT_RGB24,
