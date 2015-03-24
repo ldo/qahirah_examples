@@ -52,7 +52,7 @@ shape = \
         .new_sub_path()
         .arc(centre = (0, 35), radius = 35, angle1 = 0, angle2 = circle)
     ).copy_path().transform(Matrix.scale(2))
-# sys.stderr.write(repr(list(shape.elements)) + "\n") # debug
+#sys.stderr.write(repr(list(shape.to_elements())) + "\n") # debug
 
 # now do the actual drawing
 (g

@@ -40,7 +40,7 @@ def triwing(tilt, curve_factor, pattern_res) :
         c0 = c3
     #end for
     elts.append(Path.Close())
-    shape = Path(elts)
+    shape = Path.from_elements(elts)
     path_bounds = \
         Rect.from_corners \
           (
@@ -108,7 +108,7 @@ def arrowing(wing_ratio, pattern_res) :
             x = 4 * points[2].x,
             y = 2
           )
-    shape = Path \
+    shape = Path.from_elements \
       (
             (Path.MoveTo(points[0]),)
         +
