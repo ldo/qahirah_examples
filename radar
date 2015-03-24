@@ -16,8 +16,6 @@ from qahirah import \
     Colour, \
     deg, \
     Matrix, \
-    Path, \
-    Rect, \
     Vector
 
 scope_radius = 300
