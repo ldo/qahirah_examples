@@ -20,9 +20,9 @@ from qahirah import \
 
 colour1 = Colour.from_hsva((0.55, 0.7, 0.7))
 colour2 = Colour.from_hsva((0.05, 0.7, 0.7))
-offsets = (None, 0, 0.5, 1)
+offsets = (None, -1.0, -0.5, 0, 0.5, 1.0, 2.0)
   # offsets of patch control points from centre towards corners, None for default (Coons patch)
-swatch_size = Vector(400, 400)
+swatch_size = Vector(300, 300)
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
