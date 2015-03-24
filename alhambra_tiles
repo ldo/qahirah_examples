@@ -90,14 +90,14 @@ def arrowing(wing_ratio, pattern_res) :
     points = \
         [
             Vector(0, 0),
-            Matrix.rotate(halfangle).map(Vector(0, - wing_ratio)),
+            Matrix.rotate(halfangle) * Vector(0, - wing_ratio),
             Vector(.5, -.5),
-            Matrix.rotate(halfangle, Vector(0, -1)).map(Vector(wing_ratio, -1)),
+            Matrix.rotate(halfangle, Vector(0, -1)) * Vector(wing_ratio, -1),
             Vector(0, -1)
         ]
     for i in range(1, 4) :
         # symmetrical other half
-        points.append(Matrix.scale((-1, 1)).map(points[4 - i]))
+        points.append(Matrix.scale((-1, 1)) * points[4 - i])
     #end for
     points.append(Vector(0, 0))
     # sys.stderr.write("arrowing points = %s\n" % repr(points)) # debug
