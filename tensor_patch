@@ -1,0 +1,57 @@
+#!/usr/bin/python3
+#+
+# Demonstration of effect of control points in a tensor-product patch.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
+
+colour1 = Colour.from_hsva((0.55, 0.7, 0.7))
+colour2 = Colour.from_hsva((0.05, 0.7, 0.7))
+offsets = (None, 0, 0.5, 1)
+  # offsets of patch control points from centre towards corners, None for default (Coons patch)
+swatch_size = Vector(400, 400)
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = swatch_size * Vector(len(offsets), 1)
+  )
+g = qah.Context.create(pix)
+for i, offset in enumerate(offsets) :
+    pat = qah.MeshPattern.create()
+    pat.begin_patch()
+    for j, corner in \
+        enumerate((
+            Vector(0, 0),
+            Vector(1, 0),
+            Vector(1, 1),
+            Vector(0, 1),
+        )) \
+    :
+        pat.line_to(corner)
+        pat.set_corner_colour(j, (colour1, colour2)[j % 2 == 0])
+        if offset != None :
+            pat.set_control_point(j, qah.interp(offset, Vector(0.5, 0.5), corner))
+        #end if
+    #end for
+    pat.end_patch()
+    pat.matrix = Rect.from_dimensions(swatch_size).transform_to(Rect.from_dimensions((1, 1)))
+    g.matrix = Matrix.translate(Vector(swatch_size.x, 0) * i)
+    g.source = pat
+    g.new_path()
+    g.rectangle(Rect.from_dimensions(swatch_size))
+    g.fill()
+#end for
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
