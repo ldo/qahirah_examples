@@ -1,0 +1,52 @@
+#!/usr/bin/python3
+#+
+# Blending between two opposing rainbow-type gradations.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour
+
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = (1000, 300)
+  )
+ctx = qah.Context.create(pix)
+nr_steps = 64 # adjust to see effect on smoothness of colour gradations
+hue_offset_1 = 0.12 # this seems to give the right rainbow colour progression
+hue_offset_2 = 0.62 # try something different to above for bottom edge
+pat = qah.MeshPattern.create()
+for i in range(nr_steps) :
+    top_left_colour = Colour.from_hsva(((i / nr_steps - hue_offset_1) % 1.0, 1, 1))
+    top_right_colour = Colour.from_hsva((((i + 1) / nr_steps - hue_offset_1) % 1.0, 1, 1))
+    bot_left_colour = Colour.from_hsva((((nr_steps - i) / nr_steps - hue_offset_2) % 1.0, 1, 1))
+    bot_right_colour = Colour.from_hsva((((nr_steps - i - 1) / nr_steps - hue_offset_2) % 1.0, 1, 1))
+    (pat
+        .begin_patch()
+        .move_to((i / nr_steps * pix.width, 0))
+        .line_to(((i + 1) / nr_steps * pix.width, 0))
+        .line_to(((i + 1) / nr_steps * pix.width, pix.height))
+        .line_to((i / nr_steps * pix.width, pix.height))
+        .line_to((i / nr_steps * pix.width, 0))
+        .set_corner_colour(0, top_left_colour)
+        .set_corner_colour(1, top_right_colour)
+        .set_corner_colour(2, bot_right_colour)
+        .set_corner_colour(3, bot_left_colour)
+        .end_patch()
+    )
+#end for
+ctx.source = pat
+ctx.paint()
+
+pix \
+    .flush() \
+    .write_to_png("%s.png" % os.path.basename(sys.argv[0]))
