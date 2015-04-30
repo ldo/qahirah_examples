@@ -15,12 +15,13 @@ import os
 import math
 import array
 import qahirah as qah
-CAIRO = qah.CAIRO
-deg = qah.deg
-Vector = qah.Vector
-Matrix = qah.Matrix
-Rect = qah.Rect
-Colour = qah.Colour
+from qahirah import \
+    CAIRO, \
+    deg, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
 
 #+
 # The 38 classic B&W Mac system patterns from the PAT# 0 resource
@@ -398,7 +399,7 @@ nr_rows = 4
 saturation = 0.5
 intensity = 0.75
 pat1 = \
-    (qah.Pattern.create_linear(Vector(0, 0), Vector(0, 1))
+    (qah.Pattern.create_linear((0, 0), (0, 1))
         .add_colour_stop(0, Colour.from_hsva((.15, saturation, intensity)))
         .add_colour_stop(1, Colour.from_hsva((.65, saturation, intensity)))
     )
@@ -424,23 +425,27 @@ pix = qah.ImageSurface.create \
   )
 g = qah.Context.create(pix)
 g.operator = CAIRO.OPERATOR_SOURCE
-g.set_source_colour((0, 0, 0, 0))
+g.source_colour = Colour.grey(0, 0)
 g.paint()
 col = 0
 for i in range(len(bwpats)) :
     pat = get_pat(i)
     pat.matrix = Rect(0, 0, 2, 2).transform_to(Rect(0, 0, 1, 1))
     cell = Rect.from_dimensions(cell_size) + Vector(col, 0) * (cell_size + margins) + margins
-    g.new_path()
-    g.rectangle(cell)
-    g.operator = CAIRO.OPERATOR_SOURCE
-    g.set_source_colour(Colour.grey(1))
-    g.fill()
-    g.new_path()
-    g.source = pat
-    g.rectangle(cell)
-    g.operator = CAIRO.OPERATOR_OVER
-    g.fill()
+    (g
+        .new_path()
+        .rectangle(cell)
+        .set_operator(CAIRO.OPERATOR_SOURCE)
+        .set_source_colour(Colour.grey(1))
+        .fill()
+    )
+    (g
+        .new_path()
+        .set_source(pat)
+        .rectangle(cell)
+        .set_operator(CAIRO.OPERATOR_OVER)
+        .fill()
+    )
     g.operator = CAIRO.OPERATOR_SOURCE
     for flip in (False, True) :
         cell += Vector(0, 1) * (cell_size + margins)
@@ -461,7 +466,7 @@ for i in range(len(bwpats)) :
     g.new_path()
     g.rectangle(cell)
     g.operator = CAIRO.OPERATOR_SOURCE
-    g.set_source_colour(Colour.grey(1))
+    g.source_colour = Colour.grey(1)
     g.fill()
     g.new_path()
     pat.matrix *= Matrix.rotate(45 * deg, centre = (4, 4))

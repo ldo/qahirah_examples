@@ -13,9 +13,11 @@ import sys
 import os
 import math
 import qahirah as qah
-CAIRO = qah.CAIRO
-Vector = qah.Vector
-Rect = qah.Rect
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Rect, \
+    Vector
 
 operator_names = \
     ( # differ only in case from CAIRO.OPERATOR_xxx names
@@ -62,6 +64,8 @@ nr_rows = math.ceil(len(operator_names) / nr_cols)
 rect_size = Vector(120, 90)
 rect_1_pos = Vector(0, 0)
 rect_2_pos = Vector(40, 30)
+rect_1_colour = Colour(0.7, 0, 0, 0.8)
+rect_2_colour = Colour(0, 0, 0.9, 0.4)
 margin = Vector(10, 30)
 top_extra = 40
 draw_bounds = Rect.from_dimensions(rect_size + rect_2_pos + 2 * margin) - margin
@@ -73,8 +77,8 @@ pix = qah.ImageSurface.create \
 sys.stderr.write("(rows, cols) = (%d, %d), pix size = (%d, %d)\n" % (nr_rows, nr_cols, pix.width, pix.height)) # debug
 g = qah.Context.create(pix)
 g.operator = CAIRO.OPERATOR_SOURCE
-g.set_source_colour((0, 0, 0, 0))
-text_colour = (0, 0, 0, 1)
+g.source_colour = Colour.grey(0, 0)
+text_colour = Colour.grey(0, 1)
 g.paint()
 g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
 g.set_font_size(24)
@@ -82,9 +86,10 @@ title = "Cairo Drawing Operators"
 text_extents = g.text_extents(title)
 g.move_to \
   ((
-    (pix.width - text_extents.width) / 2, text_extents.height + text_extents.y_bearing + top_extra / 2
+    (pix.width - text_extents.width) / 2,
+    text_extents.height + text_extents.y_bearing + top_extra / 2
   ))
-g.set_source_colour(text_colour)
+g.source_colour = text_colour
 g.show_text(title)
 row = 0
 col = 0
@@ -104,7 +109,7 @@ for op_name in operator_names :
     g.reset_clip()
     g.operator = CAIRO.OPERATOR_OVER
     g.rectangle(Rect.from_dimensions(rect_size) + rect_1_pos)
-    g.set_source_colour((0.7, 0, 0, 0.8))
+    g.source_colour = rect_1_colour
     g.fill()
     g.operator = getattr(CAIRO, "OPERATOR_" + op_name.upper())
     op_unbounded = g.operator in unbounded
@@ -114,7 +119,7 @@ for op_name in operator_names :
         g.clip() # to prevent figure from wiping out others
     #end if
     g.rectangle(Rect.from_dimensions(rect_size) + rect_2_pos)
-    g.set_source_colour((0, 0, 0.9, 0.4))
+    g.source_colour = rect_2_colour
     g.fill()
     text_extents = g.text_extents(op_name)
     g.move_to \
@@ -123,7 +128,7 @@ for op_name in operator_names :
         draw_bounds.botright.y + text_extents.y_bearing + margin.y / 3
       ))
     g.operator = CAIRO.OPERATOR_SOURCE
-    g.set_source_colour(text_colour)
+    g.source_colour = text_colour
     g.show_text(op_name)
     if op_unbounded :
         g.rectangle(draw_bounds.inset((2, 2)))
