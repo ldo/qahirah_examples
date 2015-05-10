@@ -108,22 +108,26 @@ rect_2_pattern = \
                 ),
             )
       )
-margin = Vector(10, 30)
+margin = Vector(10, 10)
 top_extra = 40
-draw_bounds = Rect.from_dimensions(Vector(major_dim, major_dim) + 2 * margin) - margin
+font_size = 24
+g = qah.Context.create_for_dummy()
+g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
+g.set_font_size(font_size)
+use_font = g.scaled_font
+text_height = g.font_extents.height
+draw_bounds = Rect.from_dimensions(Vector(major_dim, major_dim) + 2 * margin + Vector(0, round(text_height)))
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_ARGB32,
-    dimensions = Vector(nr_cols, nr_rows) * draw_bounds.dimensions + Vector(0, top_extra)
+    dimensions = Vector(nr_cols, nr_rows) * draw_bounds.dimensions + margin + Vector(0, top_extra)
   )
-font_size = 24
 g = qah.Context.create(pix)
 g.operator = CAIRO.OPERATOR_SOURCE
 g.source_colour = Colour.grey(0, 0)
 text_colour = Colour.grey(0, 1)
 g.paint()
-g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
-g.set_font_size(font_size)
+g.scaled_font = use_font
 title = "Cairo Drawing Operators"
 text_extents = g.text_extents(title)
 g.move_to \
@@ -143,14 +147,12 @@ for op_name in operator_names :
         +
             Vector(col, row) * draw_bounds.dimensions
         +
-            margin
-        +
             Vector(0, top_extra)
         )
     g.matrix = draw_bounds.transform_to(dest_rect)
     g.reset_clip()
     g.operator = CAIRO.OPERATOR_OVER
-    g.rectangle(Rect.from_dimensions(Vector(major_dim, minor_dim)))
+    g.rectangle(Rect.from_dimensions(Vector(major_dim, minor_dim)) + margin)
     g.source = rect_1_pattern
     g.fill()
     g.operator = getattr(CAIRO, "OPERATOR_" + op_name.upper())
@@ -160,20 +162,21 @@ for op_name in operator_names :
         g.rectangle(draw_bounds)
         g.clip() # to prevent figure from wiping out others
     #end if
-    g.rectangle(Rect.from_dimensions(Vector(minor_dim, major_dim)) + Vector(major_dim - minor_dim, 0))
+    g.rectangle(Rect.from_dimensions(Vector(minor_dim, major_dim)) + Vector(major_dim - minor_dim, 0) + margin)
     g.source = rect_2_pattern
     g.fill()
     text_extents = g.text_extents(op_name)
     if text_extents.width > draw_bounds.width :
         hor_size = font_size * draw_bounds.width / text_extents.width
+        text_extents.width = draw_bounds.width
     else :
         hor_size = font_size
     #end if
     g.font_matrix = qah.Matrix.scale((hor_size, font_size))
     g.move_to \
       ((
-        draw_bounds.middle.x - g.text_extents(op_name).width / 2,
-        draw_bounds.botright.y + text_extents.y_bearing + margin.y / 3
+        draw_bounds.middle.x - text_extents.width / 2,
+        major_dim + text_extents.y_bearing + text_height * 2
       ))
     g.operator = CAIRO.OPERATOR_SOURCE
     g.source_colour = text_colour
