@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 #+
-# Demo of Cairo operators, reproducing the examples
-# shown at <http://cairographics.org/operators/>.
+# Demo of Cairo operators.
 #
 # Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
@@ -58,30 +57,73 @@ unbounded = \
         CAIRO.OPERATOR_DEST_IN,
         CAIRO.OPERATOR_DEST_ATOP,
     }
+
+#+
+# Mainline
+#-
+
 nr_cols = math.ceil(math.sqrt(len(operator_names)))
 nr_rows = math.ceil(len(operator_names) / nr_cols)
 
-rect_size = Vector(120, 90)
-rect_1_pos = Vector(0, 0)
-rect_2_pos = Vector(40, 30)
-rect_1_colour = Colour(0.7, 0, 0, 0.8)
-rect_2_colour = Colour(0, 0, 0.9, 0.4)
+major_dim = 150
+minor_dim = 100
+rect_1_colour = Colour.from_rgba((0.7, 0, 0, 0.8))
+rect_2_colour = Colour.from_rgba((0, 0, 0.9, 0.4))
+
+rect_1_pattern = \
+    qah.Pattern.create_linear \
+      (
+        p0 = (0, 0),
+        p1 = (major_dim, 0),
+        colour_stops =
+            (
+                (0, rect_1_colour),
+                (
+                    1,
+                    rect_1_colour.combine
+                      (
+                        other = Colour.grey(1), # ignored
+                        rgb_func = lambda ac, aa, bc, ba : 1 - ac,
+                        alpha_func = lambda aa, ba : aa
+                      )
+                ),
+            )
+      )
+rect_2_pattern = \
+    qah.Pattern.create_linear \
+      (
+        p0 = (0, 0),
+        p1 = (0, major_dim),
+        colour_stops =
+            (
+                (0, rect_2_colour),
+                (
+                    1,
+                    rect_2_colour.combine
+                      (
+                        other = Colour.grey(1), # ignored
+                        rgb_func = lambda ac, aa, bc, ba : 1 - ac,
+                        alpha_func = lambda aa, ba : aa
+                      )
+                ),
+            )
+      )
 margin = Vector(10, 30)
 top_extra = 40
-draw_bounds = Rect.from_dimensions(rect_size + rect_2_pos + 2 * margin) - margin
+draw_bounds = Rect.from_dimensions(Vector(major_dim, major_dim) + 2 * margin) - margin
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_ARGB32,
     dimensions = Vector(nr_cols, nr_rows) * draw_bounds.dimensions + Vector(0, top_extra)
   )
-sys.stderr.write("(rows, cols) = (%d, %d), pix size = (%d, %d)\n" % (nr_rows, nr_cols, pix.width, pix.height)) # debug
+font_size = 24
 g = qah.Context.create(pix)
 g.operator = CAIRO.OPERATOR_SOURCE
 g.source_colour = Colour.grey(0, 0)
 text_colour = Colour.grey(0, 1)
 g.paint()
 g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
-g.set_font_size(24)
+g.set_font_size(font_size)
 title = "Cairo Drawing Operators"
 text_extents = g.text_extents(title)
 g.move_to \
@@ -108,8 +150,8 @@ for op_name in operator_names :
     g.matrix = draw_bounds.transform_to(dest_rect)
     g.reset_clip()
     g.operator = CAIRO.OPERATOR_OVER
-    g.rectangle(Rect.from_dimensions(rect_size) + rect_1_pos)
-    g.source_colour = rect_1_colour
+    g.rectangle(Rect.from_dimensions(Vector(major_dim, minor_dim)))
+    g.source = rect_1_pattern
     g.fill()
     g.operator = getattr(CAIRO, "OPERATOR_" + op_name.upper())
     op_unbounded = g.operator in unbounded
@@ -118,13 +160,19 @@ for op_name in operator_names :
         g.rectangle(draw_bounds)
         g.clip() # to prevent figure from wiping out others
     #end if
-    g.rectangle(Rect.from_dimensions(rect_size) + rect_2_pos)
-    g.source_colour = rect_2_colour
+    g.rectangle(Rect.from_dimensions(Vector(minor_dim, major_dim)) + Vector(major_dim - minor_dim, 0))
+    g.source = rect_2_pattern
     g.fill()
     text_extents = g.text_extents(op_name)
+    if text_extents.width > draw_bounds.width :
+        hor_size = font_size * draw_bounds.width / text_extents.width
+    else :
+        hor_size = font_size
+    #end if
+    g.font_matrix = qah.Matrix.scale((hor_size, font_size))
     g.move_to \
       ((
-        draw_bounds.middle.x - text_extents.width / 2,
+        draw_bounds.middle.x - g.text_extents(op_name).width / 2,
         draw_bounds.botright.y + text_extents.y_bearing + margin.y / 3
       ))
     g.operator = CAIRO.OPERATOR_SOURCE
