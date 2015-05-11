@@ -58,6 +58,17 @@ unbounded = \
         CAIRO.OPERATOR_DEST_ATOP,
     }
 
+def complement(colour) :
+    "returns the complement of a Colour."
+    return \
+        colour.combine \
+          (
+            other = Colour.grey(1), # ignored
+            rgb_func = lambda ac, aa, bc, ba : 1 - ac,
+            alpha_func = lambda aa, ba : aa
+          )
+#end complement
+
 #+
 # Mainline
 #-
@@ -78,15 +89,7 @@ rect_1_pattern = \
         colour_stops =
             (
                 (0, rect_1_colour),
-                (
-                    1,
-                    rect_1_colour.combine
-                      (
-                        other = Colour.grey(1), # ignored
-                        rgb_func = lambda ac, aa, bc, ba : 1 - ac,
-                        alpha_func = lambda aa, ba : aa
-                      )
-                ),
+                (1, complement(rect_1_colour)),
             )
       )
 rect_2_pattern = \
@@ -97,15 +100,7 @@ rect_2_pattern = \
         colour_stops =
             (
                 (0, rect_2_colour),
-                (
-                    1,
-                    rect_2_colour.combine
-                      (
-                        other = Colour.grey(1), # ignored
-                        rgb_func = lambda ac, aa, bc, ba : 1 - ac,
-                        alpha_func = lambda aa, ba : aa
-                      )
-                ),
+                (1, complement(rect_2_colour)),
             )
       )
 margin = Vector(10, 10)
