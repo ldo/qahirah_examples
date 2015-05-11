@@ -24,7 +24,7 @@ nr_angle_steps = 16
 bg_colour = Colour.from_hsva((.36, .7, .3))
 grid_colour = Colour.from_hsva((.17, 1, .7))
 trace_colour = Colour.from_hsva((.17, 1, 1))
-trace_fade_colour = trace_colour.replace_alpha(0)
+trace_fade_colour = trace_colour.replace_rgba(a = 0)
 trace_width_angle = 25 * deg
 trace_pos_angle = 105 * deg
 bogey_size = scope_radius / 32
