@@ -162,9 +162,10 @@ for op_name in operator_names :
     g.fill()
     g.scaled_font = use_font
     text_extents = g.text_extents(op_name)
-    if text_extents.width > draw_bounds.width :
-        hor_size = font_size * draw_bounds.width / text_extents.width
-        text_extents.width = draw_bounds.width
+    max_text_width = draw_bounds.width * 0.9
+    if text_extents.width > max_text_width :
+        hor_size = font_size * max_text_width / text_extents.width
+        text_extents.width = max_text_width
     else :
         hor_size = font_size
     #end if
