@@ -75,6 +75,32 @@ def make_sample_image() :
         ctx.source_colour = Colour.grey(i / 5)
         ctx.fill()
     #end for
+    ctx.reset_clip()
+    pastel_blue = Colour.from_hsva((0.58, 0.66, 0.74))
+    pastel_green_dark = Colour.from_hsva((0.42, 0.66, 0.74))
+    pastel_pink = Colour.from_hsva((0.91, 0.66, 0.74))
+    pastel_green_light = Colour.from_hsva((0.25, 0.66, 0.74))
+    pastel_purple = Colour.from_hsva((0.75, 0.66, 0.74))
+    pastel_gold = Colour.from_hsva((0.08, 0.66, 0.74))
+    for \
+        rect, colour \
+    in \
+        (
+            (Rect(-7, -5.5, 0.95, 1.95), pastel_blue),
+            (Rect(-8, -5.5, 0.95, 5.95), pastel_green_dark),
+            (Rect(-8, 0.5, 0.95, 5.45), pastel_pink),
+            (Rect(-7, 4, 0.95, 1.95), pastel_gold),
+            (Rect(6, -5.5, 0.95, 1.95), pastel_blue),
+            (Rect(7, -5.5, 0.95, 5.95), pastel_green_light),
+            (Rect(7, 0.5, 0.95, 5.45), pastel_purple),
+            (Rect(6, 4, 0.95, 1.95), pastel_gold),
+        ) \
+    :
+        (ctx.rectangle(rect * grid_unit)
+            .set_source_colour(colour)
+            .fill()
+        )
+    #end for
     src.flush()
     return \
         src
