@@ -20,95 +20,105 @@ from qahirah import \
     Rect, \
     Vector
 
-random.seed(999) # want same sequence every time
-pat_size = 256
-patbytes = array.array("I", (0,) * (pat_size * pat_size))
-  # compute by longwords rather than bytes, so result is endian-independent
-assert patbytes.itemsize == 4 # in case of any doubt--docs seem a little unclear on this point
-for i in range(len(patbytes)) :
-    a = 255 # ignored
-    r = random.randrange(256)
-    g = random.randrange(256)
-    b = random.randrange(256)
-    patbytes[i] = a << 24 | r << 16 | g << 8 | b
-#end i
-noise_pat = \
-    (qah.Pattern.create_for_surface
-      (
-        qah.ImageSurface.create_for_array
-          (
-            arr = patbytes,
-            format = CAIRO.FORMAT_RGB24,
-            dimensions = (pat_size, pat_size),
-            stride = 4 * pat_size
-          )
-      )
-      .set_extend(CAIRO.EXTEND_REPEAT)
-      .set_matrix(Matrix.scale(0.5)) # make the noise coarser
-    )
+#+
+# Sample image & noise
+#-
 
-aspect = Vector(4, 3)
-res_scale = 192
-noise_strength = 0.5 # feel free to play with this
-circle_radius = 1.4
-grid_unit = circle_radius / 6
-src = qah.ImageSurface.create \
-  (
-    format = CAIRO.FORMAT_RGB24,
-    dimensions = aspect * res_scale
-  )
-ctx = \
-    (qah.Context.create(src)
-        .set_matrix(Matrix.scale(res_scale) * Matrix.translate(aspect / 2))
-        .set_source_colour(Colour.grey(.5))
-        .set_operator(CAIRO.OPERATOR_SOURCE)
-        .paint()
-        .arc(centre = (0, 0), radius = circle_radius, angle1 = 0, angle2 = qah.circle)
-        .clip()
-        .set_source_colour(Colour.grey(0))
-        .paint()
-        .set_source_colour(Colour.grey(1))
-        .rectangle(Rect(- circle_radius, - grid_unit * 6.5, 2 * circle_radius, 3 * grid_unit))
-        .fill()
-        .rectangle(Rect(- circle_radius, 3 * grid_unit, 2 * circle_radius, grid_unit))
-        .fill()
-    )
-for i in range(6) :
-    ctx.rectangle \
+def make_sample_image() :
+    aspect = Vector(4, 3)
+    res_scale = 192
+    circle_radius = 1.4
+    grid_unit = circle_radius / 6
+    src = qah.ImageSurface.create \
       (
-            Rect(0, 0, grid_unit * 2, grid_unit * 2)
-        +
-            Vector(i * grid_unit * 2 - circle_radius, - grid_unit * 2.5)
+        format = CAIRO.FORMAT_RGB24,
+        dimensions = aspect * res_scale
       )
-    ctx.source_colour = Colour.from_rgba \
-      (
-        (
-            (1, 0, 0, 1, 1, 0)[i],
-            (1, 1, 1, 0, 0, 0)[i],
-            (0, 1, 0, 1, 0, 1)[i],
+    ctx = \
+        (qah.Context.create(src)
+            .set_matrix(Matrix.scale(res_scale) * Matrix.translate(aspect / 2))
+            .set_source_colour(Colour.grey(.5))
+            .set_operator(CAIRO.OPERATOR_SOURCE)
+            .paint()
+            .arc(centre = (0, 0), radius = circle_radius, angle1 = 0, angle2 = qah.circle)
+            .clip()
+            .set_source_colour(Colour.grey(0))
+            .paint()
+            .set_source_colour(Colour.grey(1))
+            .rectangle(Rect(- circle_radius, - grid_unit * 6.5, 2 * circle_radius, 3 * grid_unit))
+            .fill()
+            .rectangle(Rect(- circle_radius, 3 * grid_unit, 2 * circle_radius, grid_unit))
+            .fill()
         )
-      )
-    ctx.fill()
-    ctx.rectangle \
-      (
-            Rect(0, 0, grid_unit * 2, grid_unit)
-        +
-            Vector(i * grid_unit * 2 - circle_radius, grid_unit * 2)
-      )
-    ctx.source_colour = Colour.grey(i / 5)
-    ctx.fill()
-#end for
-src.flush()
-dst = qah.ImageSurface.create \
-  (
-    format = CAIRO.FORMAT_RGB24,
-    dimensions = src.dimensions
-  )
+    for i in range(6) :
+        ctx.rectangle \
+          (
+                Rect(0, 0, grid_unit * 2, grid_unit * 2)
+            +
+                Vector(i * grid_unit * 2 - circle_radius, - grid_unit * 2.5)
+          )
+        ctx.source_colour = Colour.from_rgba \
+          (
+            (
+                (1, 0, 0, 1, 1, 0)[i],
+                (1, 1, 1, 0, 0, 0)[i],
+                (0, 1, 0, 1, 0, 1)[i],
+            )
+          )
+        ctx.fill()
+        ctx.rectangle \
+          (
+                Rect(0, 0, grid_unit * 2, grid_unit)
+            +
+                Vector(i * grid_unit * 2 - circle_radius, grid_unit * 2)
+          )
+        ctx.source_colour = Colour.grey(i / 5)
+        ctx.fill()
+    #end for
+    src.flush()
+    return \
+        src
+#end make_sample_image
+
+def make_noise_pat() :
+    random.seed(999) # want same sequence every time
+    pat_size = 256
+    patbytes = array.array("I", (0,) * (pat_size * pat_size))
+      # compute by longwords rather than bytes, so result is endian-independent
+    assert patbytes.itemsize == 4 # in case of any doubt--docs seem a little unclear on this point
+    for i in range(len(patbytes)) :
+        a = 255 # ignored
+        r = random.randrange(256)
+        g = random.randrange(256)
+        b = random.randrange(256)
+        patbytes[i] = a << 24 | r << 16 | g << 8 | b
+    #end i
+    return \
+        (qah.Pattern.create_for_surface
+          (
+            qah.ImageSurface.create_for_array
+              (
+                arr = patbytes,
+                format = CAIRO.FORMAT_RGB24,
+                dimensions = (pat_size, pat_size),
+                stride = 4 * pat_size
+              )
+          )
+          .set_extend(CAIRO.EXTEND_REPEAT)
+          .set_matrix(Matrix.scale(0.5)) # make the noise coarser
+        )
+#end make_noise_pat
+
+#+
+# Mainline
+#-
+
+src = make_sample_image()
+noise_pat = make_noise_pat()
+noise_strength = 0.5 # feel free to play with this
+dst = src.create_like()
 (qah.Context.create(dst)
-    .set_source
-      (
-        qah.Pattern.create_for_surface(src)
-      )
+    .set_source(qah.Pattern.create_for_surface(src))
     .set_operator(CAIRO.OPERATOR_SOURCE)
     .paint()
     .set_source(noise_pat)
@@ -117,4 +127,4 @@ dst = qah.ImageSurface.create \
 )
 dst \
     .flush() \
-    .write_to_png("%s.png" % os.path.basename(sys.argv[0]))
+    .write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
