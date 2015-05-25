@@ -1,0 +1,82 @@
+#!/usr/bin/python3
+#+
+# Demonstration of the effect of the transformation matrix
+# on the width of stroked lines: this shows that the line width
+# is governed by the transformation matrix in effect at the
+# time the path is stroked, not when it is constructed.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
+
+figure_dims = Vector(10, 10)
+extra_scale = 20
+transform_try = \
+    ( # first element of each pair is Matrix to use for constructing the Path,
+      # second element is additional Matrix to apply before calling stroke()
+        (Matrix.scale(extra_scale), Matrix.identity()),
+        (Matrix.scale(extra_scale), Matrix.scale((0.5, 0.25))),
+        (Matrix.scale(extra_scale), Matrix.rotate(- qah.circle / 8) * Matrix.scale((0.5, 1.5))),
+        (Matrix.scale(extra_scale), Matrix.scale(1 / extra_scale)),
+    )
+
+#+
+# Mainline
+#-
+
+nr_cols = math.ceil(math.sqrt(len(transform_try)))
+nr_rows = math.ceil(len(transform_try) / nr_cols)
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = Vector(nr_cols, nr_rows) * figure_dims * extra_scale
+  )
+g = \
+    (qah.Context.create(pix)
+        .set_source_colour(Colour.grey(1))
+        .paint()
+        .set_source_colour(Colour.grey(0))
+    )
+
+row = 0
+col = 0
+figure_bounds = Rect.from_dimensions(figure_dims) * extra_scale
+for path_transform, stroke_transform in transform_try :
+    dest_rect = \
+        (
+            figure_bounds
+        +
+            Vector(col, row) * figure_dims * extra_scale
+        )
+    g.matrix = figure_bounds.transform_to(dest_rect)
+    g.transform(path_transform)
+    g.arc \
+      (
+        centre = figure_dims / 2,
+        radius = max(tuple(figure_dims)) * 0.35,
+        angle1 = 0,
+        angle2 = qah.circle
+      )
+    g.transform(stroke_transform)
+    g.stroke()
+    col += 1
+    if col == nr_cols :
+        row += 1
+        col = 0
+    #end if
+#end for
+
+pix.write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
