@@ -62,7 +62,7 @@ def make_triangular_shadow_mask(component) :
             .set_operator(CAIRO.OPERATOR_SOURCE)
         )
     for pos in spot_positions :
-        g.arc(pos, spot_radius, 0, qah.circle)
+        g.arc(pos, spot_radius, 0, qah.circle, False)
         g.fill()
     #end for
     return \
@@ -155,7 +155,7 @@ def make_sample_image() :
             .set_source_colour(Colour.grey(.5))
             .set_operator(CAIRO.OPERATOR_SOURCE)
             .paint()
-            .arc(centre = (0, 0), radius = circle_radius, angle1 = 0, angle2 = qah.circle)
+            .arc(centre = (0, 0), radius = circle_radius, angle1 = 0, angle2 = qah.circle, negative = False)
             .clip()
             .set_source_colour(Colour.grey(0))
             .paint()

@@ -68,7 +68,8 @@ for path_transform, stroke_transform in transform_try :
         centre = figure_dims / 2,
         radius = max(tuple(figure_dims)) * 0.35,
         angle1 = 0,
-        angle2 = qah.circle
+        angle2 = qah.circle,
+        negative = False
       )
     g.transform(stroke_transform)
     g.stroke()
