@@ -61,11 +61,9 @@ unbounded = \
 def complement(colour) :
     "returns the complement of a Colour."
     return \
-        colour.combine \
+        colour.replace_hsva \
           (
-            other = Colour.grey(1), # ignored
-            rgb_func = lambda ac, aa, bc, ba : 1 - ac,
-            alpha_func = lambda aa, ba : aa
+            h = colour.to_hsva().h + 0.5
           )
 #end complement
 
