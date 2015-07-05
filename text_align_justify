@@ -16,22 +16,28 @@ from qahirah import \
     CAIRO, \
     Colour, \
     Glyph, \
+    Rect, \
     Vector
 
 def align_text(g, text_lines, line_width, align) :
     "renders the sequence of text_lines horizontally-aligned within line_width according" \
     " to align: 0 for left-aligned, 0.5 for centred, 1.0 for right-aligned; in-between" \
-    " values also allowed."
+    " values also allowed. Returns the bounds of the rendered text."
     font_extents = g.font_extents
+    bounds = Rect.empty
     for line in text_lines :
         save_pos = g.current_point
+        extents = g.text_extents(line)
         if align != 0 :
-            text_width = g.text_extents(line).width
+            text_width = extents.width
             g.rel_move_to(((line_width - text_width) * align, 0))
         #end if
+        bounds |= Rect.from_dimensions(Vector(extents.width, extents.height)) + g.current_point
         g.show_text(line)
         g.move_to(save_pos + Vector(0, font_extents.height))
     #end for
+    return \
+        bounds
 #end align_text
 
 def justify_text(g, text_lines, line_width, space_extra) :
@@ -39,7 +45,7 @@ def justify_text(g, text_lines, line_width, space_extra) :
     " space_extra is the relative amount of extra spacing to give to space glyphs; 0" \
     " means to treat them the same as non-space glyphs."
     space_glyph = g.scaled_font.text_to_glyphs((0, 0), " ", cluster_mapping = False)[0][0].index
-    #sys.stderr.write("space_glyph = %d\n" % space_glyph) # debug
+    #sys.stderr.write("space_glyph = {}\n".format(space_glyph)) # debug
     font_extents = g.font_extents
     for line in text_lines :
         save_pos = g.current_point
@@ -114,7 +120,8 @@ font_extents = g.font_extents
 g.move_to((margin, font_extents.ascent - font_extents.height + margin))
 for align in (0, 0.5, 1.0) :
     g.rel_move_to((0, font_extents.height))
-    align_text(g, text_lines, line_width, align)
+    bounds = align_text(g, text_lines, line_width, align)
+    #sys.stderr.write("bounds = {}\n".format(bounds)) # debug
 #end for
 g.move_to((2 * margin + line_width, font_extents.ascent - font_extents.height + margin))
 for space_extra in (0, 3, 10) :
