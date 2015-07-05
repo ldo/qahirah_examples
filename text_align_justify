@@ -32,7 +32,7 @@ def align_text(g, text_lines, line_width, align) :
             text_width = extents.width
             g.rel_move_to(((line_width - text_width) * align, 0))
         #end if
-        bounds |= Rect.from_dimensions(Vector(extents.width, extents.height)) + g.current_point
+        bounds |= Rect(extents.x_bearing, extents.y_bearing, extents.width, extents.height) + g.current_point
         g.show_text(line)
         g.move_to(save_pos + Vector(0, font_extents.height))
     #end for
