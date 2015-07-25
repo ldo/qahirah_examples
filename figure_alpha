@@ -1,0 +1,113 @@
+#!/usr/bin/python3
+#+
+# Demonstration of basic technique for rendering an arbitrary figure with
+# overall alpha transparency on top of a given background.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+
+figure_dimensions = Vector(100, 100)
+
+def draw_figure(g, alpha = 1.0) :
+    "draws the example foreground figure into Context g with the specified alpha" \
+    " transparency applied to the individual components."
+    line_thick = 20
+    current_point = g.current_point
+    (g
+        .save()
+        .translate(current_point)
+        .new_path()
+        .arc
+          (
+            centre = (0, 0),
+            radius = 50 - line_thick / 2,
+            angle1 = 0,
+            angle2 = qah.circle,
+            negative = False
+          )
+        .set_line_width(line_thick)
+        .set_source_colour(Colour.x11["dark goldenrod"].replace_rgba(a = alpha))
+        .stroke_preserve()
+        .set_source_colour(Colour.x11["medium turquoise"].replace_rgba(a = alpha))
+        .fill()
+        .restore()
+        .move_to(current_point)
+    )
+#end draw_figure
+
+def draw_ground(g) :
+    "draws the example background figure."
+    figure_radius = 45
+    line_thick = 20
+    current_point = g.current_point
+    (g
+        .save()
+        .translate(current_point)
+        .new_path()
+        .rectangle
+          (
+            qah.Rect(- figure_radius + line_thick / 2, - figure_radius + line_thick / 2, 2 * figure_radius - line_thick, 2 * figure_radius - line_thick)
+          )
+        .set_line_width(line_thick)
+        .set_source_colour(Colour.x11["forest green"])
+        .stroke_preserve()
+        .set_source_colour(Colour.x11["lavender blush"])
+        .fill()
+        .restore()
+        .move_to(current_point)
+    )
+#end draw_ground
+
+margin = Vector(10, 10)
+image_dimensions = (figure_dimensions + margin) * Vector(3, 1) + margin
+alpha = 0.5
+magnify = 2
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_ARGB32,
+    dimensions = image_dimensions * magnify
+  )
+g = \
+    (qah.Context.create(pix)
+        .set_operator(CAIRO.OPERATOR_SOURCE)
+        .set_source_colour(Colour.grey(0, 0))
+        .paint()
+        .set_operator(CAIRO.OPERATOR_OVER)
+        .scale(Vector(1, 1) * magnify)
+    )
+figure_origin = margin + figure_dimensions / 2
+figure_step = (margin + figure_dimensions) * Vector(1, 0)
+
+# figure 1: opaque foreground figure.
+g.move_to(figure_origin + 0 * figure_step)
+draw_ground(g)
+draw_figure(g)
+
+# figure 2: foreground figure drawn with individual components given specified alpha,
+# thereby showing through each other.
+g.move_to(figure_origin + 1 * figure_step)
+draw_ground(g)
+draw_figure(g, alpha)
+
+# figure 3: foreground figure drawn with individual components opaque relative to
+# each other, but with overall alpha applied relative to background.
+fig = qah.RecordingSurface.create(content = CAIRO.CONTENT_COLOUR_ALPHA)
+draw_figure(qah.Context.create(fig).move_to((0, 0)))
+g.move_to(figure_origin + 2 * figure_step)
+draw_ground(g)
+g.source = qah.Pattern.create_for_surface(fig).set_matrix(Matrix.translate(g.current_point).inv())
+g.paint_with_alpha(alpha)
+
+pix.write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
