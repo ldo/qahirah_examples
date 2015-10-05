@@ -62,7 +62,7 @@ figure = Path \
                     Path.Point((0, 0.5), False),
                 ],
             closed = True
-          )
+          ),
     ]
   ).transform(Matrix.scale(image_dimensions))
 
