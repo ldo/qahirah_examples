@@ -106,9 +106,9 @@ in \
         bounds, radii \
     in \
         (
-            (Rect(10, 10, 100, 200), Vector(20, 10)),
+            (Rect(10, 10, 100, 200), Vector(40, 10)),
             (Rect(120, 10, 100, 200), Vector(20, 20)),
-            (Rect(230, 10, 100, 200), Vector(10, 20)),
+            (Rect(230, 10, 100, 200), Vector(10, 40)),
         ) \
     :
         round_rect(g, bounds, radii)
