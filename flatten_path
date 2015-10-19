@@ -18,15 +18,13 @@ from qahirah import \
     Path, \
     Vector
 
-base_resolution = 72
-
 image_dimensions = Vector(100, 100)
 max_thickness = 30
 resolution = 300
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_ARGB32,
-    dimensions = round((image_dimensions + Vector(1, 1) * max_thickness) * resolution / base_resolution)
+    dimensions = round((image_dimensions + Vector(1, 1) * max_thickness) * resolution / qah.base_dpi)
   )
 draw = \
     (qah.Context.create(pix)
@@ -35,7 +33,7 @@ draw = \
         .set_source_colour(Colour.grey(0, 1))
         .set_matrix
           (
-                Matrix.scale(resolution / base_resolution)
+                Matrix.scale(resolution / qah.base_dpi)
             *
                 Matrix.translate(Vector(1, 1) * max_thickness / 2)
           )
