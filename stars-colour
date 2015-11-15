@@ -10,8 +10,8 @@
 
 import sys
 import os
+import math
 import array
-import random
 import qahirah as qah
 from qahirah import \
     CAIRO, \
@@ -19,6 +19,36 @@ from qahirah import \
     Matrix, \
     Rect, \
     Vector
+
+class RubbishRandom :
+    "a very crude random-number generator. The purpose of using this is to" \
+    " ensure all runs of this sample program will produce exactly the same output."
+
+    def __init__(self, seed) :
+        self.seed = seed
+    #end __init__
+
+    def random(self) :
+        "returns a random float in the range [0 .. 1)."
+        # algorithm is that of the good old BSD linear-congruential pseudo-random number generator.
+        self.seed = (1103515245 * self.seed + 12345) % (1 << 31)
+        return \
+            self.seed / (1 << 31)
+    #end random
+
+    def randrange(self, upper) :
+        "returns a random integer in range(upper)."
+        return \
+            math.trunc(self.random() * upper)
+    #end randrange
+
+    def choice(self, seq) :
+        "returns a random item from a sequence."
+        return \
+            seq[self.randrange(len(seq))]
+    #end choice
+
+#end RubbishRandom
 
 colours = \
     ( # stars cannot be just any colour, mainly red/orange/yellow and blue-white
@@ -31,11 +61,11 @@ colours = \
         Colour.from_hsva((0.57, 0.4, 1)),
     )
 
-random.seed(999) # want same sequence every time
+random = RubbishRandom(999) # want same sequence every time
 pat_size = 1024
 patbytes = array.array("I", (0xff000000,) * (pat_size * pat_size))
 for i in range(1000) :
-    pos = round(Vector(random.random(), random.random()) * (pat_size - 1))
+    pos = Vector(random.randrange(pat_size), random.randrange(pat_size))
     brightness = random.random() ** 3 # dimmer ones are more common
     colour = random.choice(colours)
     patbytes[pos.x + pos.y * pat_size] = \
