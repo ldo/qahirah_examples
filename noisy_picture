@@ -138,15 +138,22 @@ def make_sample_image() :
 
 def make_noise_pat() :
     random = RubbishRandom(999) # want same sequence every time
+
+    def noise_byte() :
+        return \
+            random.randrange(255)
+    #end noise_byte
+
+#begin make_noise_pat
     pat_size = 256
     patbytes = array.array("I", (0,) * (pat_size * pat_size))
       # compute by longwords rather than bytes, so result is endian-independent
     assert patbytes.itemsize == 4 # in case of any doubt--docs seem a little unclear on this point
     for i in range(len(patbytes)) :
         a = 255 # ignored
-        r = random.randrange(256)
-        g = random.randrange(256)
-        b = random.randrange(256)
+        r = noise_byte()
+        g = noise_byte()
+        b = noise_byte()
         patbytes[i] = a << 24 | r << 16 | g << 8 | b
     #end i
     return \
@@ -161,6 +168,7 @@ def make_noise_pat() :
               )
           )
           .set_extend(CAIRO.EXTEND_REPEAT)
+          #.set_filter(CAIRO.FILTER_NEAREST) # try this if you like
           .set_matrix(Matrix.scale(0.5)) # make the noise coarser
         )
 #end make_noise_pat
@@ -169,17 +177,24 @@ def make_noise_pat() :
 # Mainline
 #-
 
-src = make_sample_image()
-noise_pat = make_noise_pat()
-noise_strength = 0.5 # feel free to play with this
-dst = src.create_like()
-(qah.Context.create(dst)
-    .set_source(qah.Pattern.create_for_surface(src))
+dst = make_sample_image()
+noise_strength = 0.5
+  # feel free to play with this
+  # useful values range from 0 - no noise, to 1 - pure noise, image disappears
+noise_pat = make_noise_pat() # why does it segfault if I substitute call directly below?
+mask = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_A8,
+    dimensions = dst.dimensions
+  )
+(qah.Context.create(mask)
+    .set_source_colour(Colour.grey(1, noise_strength))
     .set_operator(CAIRO.OPERATOR_SOURCE)
     .paint()
+)
+(qah.Context.create(dst)
     .set_source(noise_pat)
-    .set_operator(CAIRO.OPERATOR_DIFFERENCE) # closest I can get to a bitwise-xor effect
-    .paint_with_alpha(noise_strength)
+    .mask_surface(mask, (0, 0))
 )
 dst \
     .flush() \
