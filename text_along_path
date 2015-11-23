@@ -1,0 +1,155 @@
+#!/usr/bin/python3
+#+
+# Qahirah example--draw text along a path.
+#
+# This is based on an example from the old “PostScript Language Tutorial
+# and Cookbook” (a.k.a. the PostScript Blue Book), with some refinements
+# of my own.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+
+def pathtext(g, path, txt, offset) :
+    "draws the characters of txt along the specified path in the Context g, using its" \
+    " current font and other rendering settings. offset is the initial character placement" \
+    " offset from the start of the path."
+    path = path.flatten() # ensure all straight-line segments
+    curch = 0 # index into txt
+    setdist = offset # distance at which to place next char
+    pathdist = 0
+    for seg in path.segments :
+        curpos = None
+        ovr = 0
+        for pt in tuple(seg.points) + ((), (seg.points[0],))[seg.closed] :
+            assert not pt.off
+            prevpos = curpos
+            curpos = pt.pt
+            if prevpos != None :
+                delta = curpos - prevpos
+                dist = abs(delta) # length of line segment
+                if dist != 0 :
+                    ds = delta / dist * ovr
+                    cp = g.user_to_device(prevpos + ds)
+                    pathdist += dist # accumulate length of path
+                    while True :
+                        if setdist > pathdist :
+                            # no more room to place a character
+                            ovr = setdist - pathdist
+                              # deduct off placement of first char on next line segment
+                            break
+                        #end if
+                        if curch == len(txt) :
+                            # no more characters to place
+                            break
+                        # place another character along this line segment
+                        ch = txt[curch] # FIXME: should not split off trailing diacritics
+                        curch += 1
+                        text_extents = g.text_extents(ch)
+                        charbounds = Vector(text_extents.x_advance, text_extents.y_bearing)
+                        g.save()
+                        g.transform \
+                          (
+                                Matrix.translate
+                                  (
+                                    g.device_to_user(cp) + delta * charbounds / 2 / dist
+                                  ) # midpoint of character back to character position
+                            *
+                                Matrix.rotate(delta.angle())
+                                  # rotate about midpoint of character
+                            *
+                                Matrix.translate(- charbounds / 2)
+                                  # midpoint of character to origin
+                          )
+                        g.show_text(ch)
+                        cp = g.user_to_device(g.current_point)
+                        g.restore()
+                        setdist += charbounds.x # update distance travelled along path
+                    #end while
+                #end if
+            #end if
+        #end for
+    #end for
+#end pathtext
+
+#+
+# Mainline
+#-
+
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = (400, 400)
+  )
+g = \
+    (qah.Context.create(pix)
+        .set_source_colour(Colour.grey(1))
+        .paint()
+        .set_source_colour(Colour.grey(0))
+        .set_font_face
+          (
+            qah.FontFace.create_for_pattern("Helvetica")
+          )
+        .set_font_size(16)
+    )
+txt = "If my film makes one more person feel miserable I’ll feel I’ve done my job. — WOODY ALLEN"
+path = (qah.Context.create_for_dummy()
+    .new_path()
+    .arc
+      (
+        centre = (130, 130),
+        radius = 70,
+        angle1 = 0 * qah.deg,
+        angle2 = 90 * qah.deg,
+        negative = True
+      )
+    .arc
+      (
+        centre = (240, 130),
+        radius = 70,
+        angle1 = 90 * qah.deg,
+        angle2 = 180 * qah.deg,
+        negative = True
+      )
+    .copy_path()
+)
+
+pathtext(g, path, txt, 55)
+if False : # debug
+    # just to compare placement of text with original path
+    (g
+        .append_path(path)
+        .stroke()
+        .move_to((-130, 330))
+        .show_text(txt)
+    )
+#end if
+
+(g
+    .new_path()
+    .move_to((80, 320))
+    .line_to((290, 320))
+    .line_to((290, 230))
+    .line_to((80, 230))
+    .close_path()
+    .move_to((290, 283))
+    .line_to((340, 300))
+    .line_to((340, 250))
+    .line_to((290, 267))
+    .set_line_width(2)
+    .stroke()
+)
+
+pix.flush().write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
