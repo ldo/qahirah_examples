@@ -87,6 +87,8 @@ for seg in figure.flatten(tolerance = 0.01).segments :
                 delta = p2 - p1
                 orient = delta.angle()
                 step = abs(delta)
+                # Slant starting and ending edges of segment to nicely abut adjacent
+                # segments.
                 # Note how the following angles are normalized to [-180°, +180°]
                 # instead of [0, 360°] to avoid discontinuities around 0°.
                 if p0 != p1 :
