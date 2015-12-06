@@ -1,6 +1,14 @@
 #!/usr/bin/python3
 #+
-# Qahirah example--Use an arbitrary pattern like a line dash.
+# Qahirah example--Use an arbitrary pattern like a line dash along a path.
+#
+# Basic technique:
+#   * Flatten the path to a series of straight-line segments.
+#   * Construct my own quadrilateral shape representing each
+#     path segment.
+#   * Fill each quadrilateral segment with an appropriate stretch
+#     of pattern, aligned along the segment direction and correctly
+#     offset to meet up smoothly with adjacent segments.
 #
 # Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
