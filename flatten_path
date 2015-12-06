@@ -57,7 +57,7 @@ figure = Path \
                     Path.Point((0.5, 0.5), False),
                     Path.Point((0.25, 1), True),
                     Path.Point((0, 1), True),
-                    Path.Point((0, 0.5), False),
+                    #Path.Point((0, 0.5), False), # no need to repeat first point now
                 ],
             closed = True
           ),
