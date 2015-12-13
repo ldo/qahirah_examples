@@ -155,7 +155,7 @@ def make_noise_pat() :
         g = noise_byte()
         b = noise_byte()
         patbytes[i] = a << 24 | r << 16 | g << 8 | b
-    #end i
+    #end for
     return \
         (qah.Pattern.create_for_surface
           (
