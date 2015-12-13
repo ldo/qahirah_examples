@@ -141,7 +141,7 @@ def make_noise_pat() :
 
     def noise_byte() :
         return \
-            random.randrange(255)
+            random.randrange(256)
     #end noise_byte
 
 #begin make_noise_pat
