@@ -51,7 +51,8 @@ shape = \
         .arc(centre = (0, 65), radius = 35, angle1 = 0, angle2 = circle, negative = False)
         .new_sub_path()
         .arc(centre = (0, 35), radius = 35, angle1 = 0, angle2 = circle, negative = False)
-    ).copy_path().transform(Matrix.scale(2))
+        .copy_path()
+    ).transform(Matrix.scale(2))
 #sys.stderr.write(repr(list(shape.to_elements())) + "\n") # debug
 
 # now do the actual drawing
@@ -70,39 +71,46 @@ shape = \
     .set_line_width(10)
     .set_line_cap(CAIRO.LINE_CAP_BUTT)
     .stroke()
-).dash = ((), 0)
+)
 
-g.matrix = g.matrix = origin_to_centre * Matrix.rotate(2 * angle_step) * offset_from_origin
-g.new_path()
-g.append_path(shape)
-g.dash = ((5, 8, 2, 8), 0)
-g.line_width = 4
-g.line_cap = CAIRO.LINE_CAP_ROUND
-g.stroke()
+(g
+    .set_matrix(origin_to_centre * Matrix.rotate(2 * angle_step) * offset_from_origin)
+    .new_path()
+    .append_path(shape)
+    .set_dash(((5, 8, 2, 8), 0))
+    .set_line_width(4)
+    .set_line_cap(CAIRO.LINE_CAP_ROUND)
+    .stroke()
+)
+
+(g
+    .set_matrix(origin_to_centre * Matrix.rotate(3 * angle_step) * offset_from_origin)
+    .new_path()
+    .append_path(shape)
+    .set_dash(((5, 8, 2, 8), 0))
+    .set_line_width(5)
+    .set_line_cap(CAIRO.LINE_CAP_SQUARE)
+    .stroke()
+)
+
 g.dash = ((), 0)
-
-g.matrix = g.matrix = origin_to_centre * Matrix.rotate(3 * angle_step) * offset_from_origin
-g.new_path()
-g.append_path(shape)
-g.dash = ((5, 8, 2, 8), 0)
-g.line_width = 5
-g.line_cap = CAIRO.LINE_CAP_SQUARE
-g.stroke()
-g.dash = ((), 0)
-
 g.source = pat
 
-g.matrix = g.matrix = origin_to_centre * Matrix.rotate(4 * angle_step) * offset_from_origin
-g.new_path()
-g.append_path(shape)
-g.fill_rule = CAIRO.FILL_RULE_WINDING
-g.fill()
+(g
+    .set_matrix(origin_to_centre * Matrix.rotate(4 * angle_step) * offset_from_origin)
+    .new_path()
+    .append_path(shape)
+    .set_fill_rule(CAIRO.FILL_RULE_WINDING)
+    .fill()
+)
 
-g.matrix = g.matrix = origin_to_centre * Matrix.rotate(0 * angle_step) * offset_from_origin
-g.new_path()
-g.append_path(shape)
-g.fill_rule = CAIRO.FILL_RULE_EVEN_ODD
-g.fill()
+(g
+    .set_matrix(origin_to_centre * Matrix.rotate(0 * angle_step) * offset_from_origin)
+    .new_path()
+    .append_path(shape)
+    .set_fill_rule(CAIRO.FILL_RULE_EVEN_ODD)
+    .fill()
+)
 
 pix.flush()
 pix.write_to_png("%s.png" % os.path.basename(sys.argv[0]))
