@@ -67,7 +67,12 @@ in \
 :
     for col, params in enumerate(paramslist) :
         pat = create(**dict(params, colour_stops = colour_stops))
-        pat.matrix = (Matrix.translate((figure_size.x / 4, figure_size.y / 3)) * Matrix.scale(figure_size.x / (patscale * 4))).inv()
+        pat.matrix = \
+            (
+                Matrix.translate((figure_size.x / 4, figure_size.y / 3))
+            *
+                Matrix.scale(figure_size.x / (patscale * 4))
+            ).inv()
         pat.extend = CAIRO.EXTEND_REPEAT
         ctx.matrix = Matrix.translate(Vector(col, row) * (figure_size + margins) + margins)
         ctx.source = pat
