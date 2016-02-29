@@ -24,7 +24,8 @@ circle = qah.Path.create_arc \
     radius = figure_dimensions.x / 2,
     angle1 = 0,
     angle2 = qah.circle,
-    negative = False
+    negative = False,
+    closed = True
   )
 
 def figure_1(g) :
