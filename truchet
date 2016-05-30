@@ -198,7 +198,7 @@ col = 0
 for do_tile in truchet_types :
     (g
         .save()
-        .translate(margin + Vector(row, col) * (figure_dimensions + margin))
+        .translate(margin + Vector(col, row) * (figure_dimensions + margin))
     )
     random = RubbishRandom(999) # want same sequence every time
     draw_truchet \
@@ -209,10 +209,10 @@ for do_tile in truchet_types :
         nr_tiles = nr_tiles,
       )
     g.restore()
-    row += 1
-    if row == nr_rows :
-        row = 0
-        col += 1
+    col += 1
+    if col == nr_cols :
+        col = 0
+        row += 1
     #end if
 #end for
 
