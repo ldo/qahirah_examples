@@ -11,7 +11,6 @@
 import sys
 import os
 import math
-import enum
 import qahirah as qah
 from qahirah import \
     CAIRO, \
@@ -58,18 +57,8 @@ class RubbishRandom :
 # The tilings
 #-
 
-@enum.unique
-class TRUCHET_TYPE(enum.Enum) :
-    "types of Truchet tilings."
-    DIAG = 1
-    SECTOR = 2
-    ARC = 3
-    CORNER = 4
-#end TRUCHET_TYPE
-
-def draw_truchet(g : Context, truchet_type : TRUCHET_TYPE, total_dimensions : Vector, nr_tiles : Vector) :
-    "fills in a Truchet tiling of the specified type and number of tiles within the bounds" \
-    " with corners (0, 0) and total_dimensions."
+class TruchetActions :
+    "temp namespace to collect different types of Truchet tiles."
 
     def diag_tile(p1 : Vector, p2 : Vector) :
         "Truchet tiles consisting of half-filled squares."
@@ -139,16 +128,25 @@ def draw_truchet(g : Context, truchet_type : TRUCHET_TYPE, total_dimensions : Ve
         )
     #end corner_tile
 
-#begin draw_truchet
+    types = \
+        [
+            diag_tile,
+            sector_tile,
+            arc_tile,
+            corner_tile,
+        ]
+
+#end TruchetActions
+
+truchet_types = TruchetActions.types
+del TruchetActions
+
+def draw_truchet(g : Context, do_tile, total_dimensions : Vector, nr_tiles : Vector) :
+    "fills in a Truchet tiling of the specified type and number of tiles within the bounds" \
+    " with corners (0, 0) and total_dimensions."
+
     assert nr_tiles.isint() and nr_tiles.x > 0 and nr_tiles.y > 0
     tile_dimensions = total_dimensions / nr_tiles
-    do_tile = \
-        {
-            TRUCHET_TYPE.DIAG : diag_tile,
-            TRUCHET_TYPE.SECTOR : sector_tile,
-            TRUCHET_TYPE.ARC : arc_tile,
-            TRUCHET_TYPE.CORNER : corner_tile,
-        }[truchet_type]
     save_matrix = g.matrix
     for x in range(nr_tiles.x) :
         for y in range(nr_tiles.y) :
@@ -175,8 +173,8 @@ nr_tiles = Vector(1, 1) * 16
 tile_dimensions = Vector(1, 1) * 24
 margin = Vector(1, 1) * 20
 figure_dimensions = tile_dimensions * nr_tiles
-nr_cols = math.ceil(math.sqrt(len(TRUCHET_TYPE)))
-nr_rows = math.ceil(len(TRUCHET_TYPE) / nr_cols)
+nr_cols = math.ceil(math.sqrt(len(truchet_types)))
+nr_rows = math.ceil(len(truchet_types) / nr_cols)
 image_dimensions = (figure_dimensions + margin) * Vector(nr_cols, nr_rows) + margin
 pix = qah.ImageSurface.create \
   (
@@ -192,7 +190,7 @@ g = \
     )
 row = 0
 col = 0
-for truchet_type in TRUCHET_TYPE :
+for do_tile in truchet_types :
     (g
         .save()
         .translate(margin + Vector(row, col) * (figure_dimensions + margin))
@@ -201,7 +199,7 @@ for truchet_type in TRUCHET_TYPE :
     draw_truchet \
       (
         g = g,
-        truchet_type = truchet_type,
+        do_tile = do_tile,
         total_dimensions = figure_dimensions,
         nr_tiles = nr_tiles,
       )
