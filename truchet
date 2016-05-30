@@ -163,13 +163,44 @@ class TruchetActions :
         )
     #end corner_tile
 
+    def diag_stripes_tile(g : Context, p1 : Vector, p2 : Vector) :
+        p1a = Vector(p1.x, p2.y)
+        p2a = Vector(p2.x, p1.y)
+        frac = 0.25
+        (g
+            .move_to(p1 + (p2a - p1) * frac)
+            .line_to(p1 + (p1a - p1) * frac)
+            .stroke()
+            .move_to(p1 + (p2a - p1) * (1 - frac))
+            .line_to(p1 + (p1a - p1) * (1 - frac))
+            .stroke()
+        )
+    #end diag_stripes_tile
+
+    def cross_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "two lines crossing."
+        p1a = Vector(p1.x, p2.y)
+        p2a = Vector(p2.x, p1.y)
+        frac = 0.3
+        (g
+            .move_to(p1 + (p2a - p1) * frac)
+            .line_to(p1 + (p1a - p1) * (1 - frac))
+            .stroke()
+            .move_to(p1 + (p2a - p1) * (1 - frac))
+            .line_to(p1 + (p1a - p1) * frac)
+            .stroke()
+        )
+    #end cross_tile
+
     types = \
         [
             diag_tile,
             sector_tile,
             hollow_sector_tile,
             arc_tile,
-            corner_tile,
+            #corner_tile,
+            diag_stripes_tile,
+            cross_tile,
         ]
 
 #end TruchetActions
