@@ -91,6 +91,36 @@ class TruchetActions :
         )
     #end sector_tile
 
+    def hollow_sector_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "filled quarter-circle with hole in middle."
+        inset = 0.15
+        cell_radius = abs(p2 - p1) / math.sqrt(2)
+        outer_radius = cell_radius * (1 - inset)
+        inner_radius = cell_radius * inset
+        (g
+            .move_to(p2)
+            .arc
+              (
+                centre = p2,
+                radius = outer_radius,
+                angle1 = 180 * qah.deg,
+                angle2 = 270 * qah.deg,
+                negative = False
+              )
+            .line_to(p2 + (p1 - p2) * Vector(0, inner_radius))
+            .arc
+              (
+                centre = p2,
+                radius = inner_radius,
+                angle1 = 270 * qah.deg,
+                angle2 = 180 * qah.deg,
+                negative = True
+              )
+            .close_path()
+            .fill()
+        )
+    #end hollow_sector_tile
+
     def arc_tile(g : Context, p1 : Vector, p2 : Vector) :
         "circular arcs."
         radius = abs(p2 - p1) / math.sqrt(8)
@@ -137,6 +167,7 @@ class TruchetActions :
         [
             diag_tile,
             sector_tile,
+            hollow_sector_tile,
             arc_tile,
             corner_tile,
         ]
