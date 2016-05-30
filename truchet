@@ -163,7 +163,29 @@ class TruchetActions :
         )
     #end corner_tile
 
-    def diag_stripes_tile(g : Context, p1 : Vector, p2 : Vector) :
+    def def_diag_stripes_tile(frac : float) :
+
+        def diag_stripes_tile(g : Context, p1 : Vector, p2 : Vector) :
+            "two symmetrical diagonal stripes."
+            p1a = Vector(p1.x, p2.y)
+            p2a = Vector(p2.x, p1.y)
+            (g
+                .move_to(p1 + (p2a - p1) * frac)
+                .line_to(p1 + (p1a - p1) * frac)
+                .stroke()
+                .move_to(p2 + (p2a - p2) * frac)
+                .line_to(p2 + (p1a - p2) * frac)
+                .stroke()
+            )
+        #end diag_stripes_tile
+
+    #begin def_diag_stripes_tile
+        return \
+            diag_stripes_tile
+    #end def_diag_stripes_tile
+
+    def corner_stripes_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "two diagonal stripes close to one corner."
         p1a = Vector(p1.x, p2.y)
         p2a = Vector(p2.x, p1.y)
         frac = 0.25
@@ -175,7 +197,7 @@ class TruchetActions :
             .line_to(p1 + (p1a - p1) * (1 - frac))
             .stroke()
         )
-    #end diag_stripes_tile
+    #end corner_stripes_tile
 
     def cross_tile(g : Context, p1 : Vector, p2 : Vector) :
         "two lines crossing."
@@ -198,8 +220,10 @@ class TruchetActions :
             sector_tile,
             hollow_sector_tile,
             arc_tile,
+            def_diag_stripes_tile(0.5),
+            def_diag_stripes_tile(0.8),
             #corner_tile,
-            diag_stripes_tile,
+            corner_stripes_tile,
             cross_tile,
         ]
 
