@@ -131,11 +131,11 @@ def draw_truchet(g : Context, truchet_type : TRUCHET_TYPE, total_dimensions : Ve
         frac = 3 / 8
         (g
             .move_to((p1 + p2a) / 2)
-            .line_to(p2a + (p1a - p2a) * frac)
-            .line_to((p2 + p2a) / 2)
+            .line_to(p1 + (p2 - p1) * frac)
+            .line_to((p1 + p1a) / 2)
             .stroke()
-            .move_to((p1 + p1a) / 2)
-            .line_to(p1a + (p2a - p1a) * frac)
+            .move_to((p2 + p2a) / 2)
+            .line_to(p2 + (p1 - p2) * frac)
             .line_to((p2 + p1a) / 2)
             .stroke()
         )
