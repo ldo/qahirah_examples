@@ -58,7 +58,10 @@ class RubbishRandom :
 #-
 
 class TruchetActions :
-    "temp namespace to collect different types of Truchet tiles."
+    "temp namespace to collect different types of Truchet tiles." \
+    " Each action takes 3 args: the Context into which to draw the tile," \
+    " and two opposite corner points of the cell, notionally the top-left" \
+    " and bottom-right."
 
     def diag_tile(g : Context, p1 : Vector, p2 : Vector) :
         "half-filled squares."
