@@ -60,8 +60,8 @@ class RubbishRandom :
 class TruchetActions :
     "temp namespace to collect different types of Truchet tiles."
 
-    def diag_tile(p1 : Vector, p2 : Vector) :
-        "Truchet tiles consisting of half-filled squares."
+    def diag_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "half-filled squares."
         (g
             .move_to((p2.x, p1.y))
             .line_to(p2)
@@ -71,7 +71,8 @@ class TruchetActions :
         )
     #end diag_tile
 
-    def sector_tile(p1 : Vector, p2 : Vector) :
+    def sector_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "filled quarter-circle."
         radius = abs(p2 - p1) / math.sqrt(2)
         (g
             .move_to(p2)
@@ -87,8 +88,8 @@ class TruchetActions :
         )
     #end sector_tile
 
-    def arc_tile(p1 : Vector, p2 : Vector) :
-        "Truchet tiles consisting of circular arcs."
+    def arc_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "circular arcs."
         radius = abs(p2 - p1) / math.sqrt(8)
         (g
             .arc
@@ -112,7 +113,8 @@ class TruchetActions :
         )
     #end arc_tile
 
-    def corner_tile(p1 : Vector, p2 : Vector) :
+    def corner_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "angular arc."
         p1a = Vector(p1.x, p2.y)
         p2a = Vector(p2.x, p1.y)
         frac = 3 / 8
@@ -159,7 +161,7 @@ def draw_truchet(g : Context, do_tile, total_dimensions : Vector, nr_tiles : Vec
                 *
                     Matrix.rotate(angle = rotate * qah.circle / 4, centre = (p1 + p2) / 2)
                 )
-            do_tile(p1, p2)
+            do_tile(g, p1, p2)
         #end for
     #end for
     g.matrix = save_matrix
