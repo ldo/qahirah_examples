@@ -1,0 +1,168 @@
+#!/usr/bin/python3
+#+
+# Try some Truchet tilings <http://mathworld.wolfram.com/TruchetTiling.html>.
+#
+# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import enum
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
+
+#+
+# Useful stuff
+#-
+
+class RubbishRandom :
+    "a very crude random-number generator. The purpose of using this is to" \
+    " ensure all runs of this sample program will produce exactly the same output."
+
+    def __init__(self, seed) :
+        self.seed = seed
+    #end __init__
+
+    def random(self) :
+        "returns a random float in the range [0 .. 1)."
+        # algorithm is that of the good old BSD linear-congruential pseudo-random number generator.
+        self.seed = (1103515245 * self.seed + 12345) % (1 << 31)
+        return \
+            self.seed / (1 << 31)
+    #end random
+
+    def randrange(self, upper) :
+        "returns a random integer in range(upper)."
+        return \
+            math.trunc(self.random() * upper)
+    #end randrange
+
+    def choice(self, seq) :
+        "returns a random item from a sequence."
+        return \
+            seq[self.randrange(len(seq))]
+    #end choice
+
+#end RubbishRandom
+
+#+
+# The tilings
+#-
+
+@enum.unique
+class TRUCHET_TYPE(enum.Enum) :
+    "types of Truchet tilings."
+    DIAG = 1
+    ARC = 2
+#end TRUCHET_TYPE
+
+def draw_truchet(g : qah.Context, truchet_type : TRUCHET_TYPE, total_dimensions : Vector, nr_tiles : Vector) :
+    "fills in a Truchet tiling of the specified type and number of tiles within the bounds" \
+    " with corners (0, 0) and total_dimensions."
+
+    random = RubbishRandom(999) # want same sequence every time
+
+    def diag_tile(p1 : Vector, p2 : Vector) :
+        "Truchet tiles consisting of half-filled squares."
+        (g
+            .move_to((p2.x, p1.y))
+            .line_to(p2)
+            .line_to((p1.x, p2.y))
+            .close_path()
+            .fill()
+        )
+    #end diag_tile
+
+    def arc_tile(p1 : Vector, p2 : Vector) :
+        "Truchet tiles consisting of circular arcs."
+        radius = abs(p2 - p1) / math.sqrt(8)
+        (g
+            .arc
+              (
+                centre = p1,
+                radius = radius,
+                angle1 = 0,
+                angle2 = 90 * qah.deg,
+                negative = False
+              )
+            .stroke()
+            .arc
+              (
+                centre = p2,
+                radius = radius,
+                angle1 = 180 * qah.deg,
+                angle2 = 270 * qah.deg,
+                negative = False
+              )
+            .stroke()
+        )
+    #end arc_tile
+
+#begin draw_truchet
+    assert nr_tiles.isint() and nr_tiles.x > 0 and nr_tiles.y > 0
+    tile_dimensions = total_dimensions / nr_tiles
+    do_tile = {TRUCHET_TYPE.DIAG : diag_tile, TRUCHET_TYPE.ARC : arc_tile}[truchet_type]
+    save_matrix = g.matrix
+    for x in range(nr_tiles.x) :
+        for y in range(nr_tiles.y) :
+            p1 = tile_dimensions * Vector(x, y)
+            p2 = tile_dimensions * Vector(x + 1, y + 1)
+            rotate = random.randrange(4)
+            g.matrix = \
+                (
+                    save_matrix
+                *
+                    Matrix.rotate(angle = rotate * qah.circle / 4, centre = (p1 + p2) / 2)
+                )
+            do_tile(p1, p2)
+        #end for
+    #end for
+    g.matrix = save_matrix
+#end draw_truchet
+
+#+
+# Mainline
+#-
+
+nr_tiles = Vector(1, 1) * 16
+tile_dimensions = Vector(1, 1) * 32
+margin = Vector(1, 1) * 10
+figure_dimensions = tile_dimensions * nr_tiles
+image_dimensions = (figure_dimensions + margin) * Vector(len(TRUCHET_TYPE), 1) + margin
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = image_dimensions
+  )
+g = \
+    (qah.Context.create(pix)
+        .set_source_colour(Colour.grey(1))
+        .paint()
+        .set_source_colour(Colour.grey(0))
+        .set_line_width(2)
+    )
+for i, truchet_type in enumerate(TRUCHET_TYPE) :
+    (g
+        .save()
+        .translate(margin + Vector(i * (figure_dimensions.x + margin.x), 0))
+    )
+    draw_truchet \
+      (
+        g = g,
+        truchet_type = truchet_type,
+        total_dimensions = figure_dimensions,
+        nr_tiles = nr_tiles,
+      )
+    g.restore()
+#end for
+
+pix.flush().write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
