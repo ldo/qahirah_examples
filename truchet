@@ -172,10 +172,12 @@ def draw_truchet(g : Context, truchet_type : TRUCHET_TYPE, total_dimensions : Ve
 #-
 
 nr_tiles = Vector(1, 1) * 16
-tile_dimensions = Vector(1, 1) * 32
-margin = Vector(1, 1) * 10
+tile_dimensions = Vector(1, 1) * 24
+margin = Vector(1, 1) * 20
 figure_dimensions = tile_dimensions * nr_tiles
-image_dimensions = (figure_dimensions + margin) * Vector(len(TRUCHET_TYPE), 1) + margin
+nr_cols = math.ceil(math.sqrt(len(TRUCHET_TYPE)))
+nr_rows = math.ceil(len(TRUCHET_TYPE) / nr_cols)
+image_dimensions = (figure_dimensions + margin) * Vector(nr_cols, nr_rows) + margin
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
@@ -188,10 +190,12 @@ g = \
         .set_source_colour(Colour.grey(0))
         .set_line_width(2)
     )
-for i, truchet_type in enumerate(TRUCHET_TYPE) :
+row = 0
+col = 0
+for truchet_type in TRUCHET_TYPE :
     (g
         .save()
-        .translate(margin + Vector(i * (figure_dimensions.x + margin.x), 0))
+        .translate(margin + Vector(row, col) * (figure_dimensions + margin))
     )
     random = RubbishRandom(999) # want same sequence every time
     draw_truchet \
@@ -202,6 +206,11 @@ for i, truchet_type in enumerate(TRUCHET_TYPE) :
         nr_tiles = nr_tiles,
       )
     g.restore()
+    row += 1
+    if row == nr_rows :
+        row = 0
+        col += 1
+    #end if
 #end for
 
 pix.flush().write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
