@@ -71,8 +71,6 @@ def draw_truchet(g : Context, truchet_type : TRUCHET_TYPE, total_dimensions : Ve
     "fills in a Truchet tiling of the specified type and number of tiles within the bounds" \
     " with corners (0, 0) and total_dimensions."
 
-    random = RubbishRandom(999) # want same sequence every time
-
     def diag_tile(p1 : Vector, p2 : Vector) :
         "Truchet tiles consisting of half-filled squares."
         (g
@@ -195,6 +193,7 @@ for i, truchet_type in enumerate(TRUCHET_TYPE) :
         .save()
         .translate(margin + Vector(i * (figure_dimensions.x + margin.x), 0))
     )
+    random = RubbishRandom(999) # want same sequence every time
     draw_truchet \
       (
         g = g,
