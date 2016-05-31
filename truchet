@@ -7,11 +7,11 @@
 # join seamlessly across an adjacent cell where the common sides come
 # from the same pair.
 #
-# The variety in the pattern is provided by randomly reflecting
-# each cell about the x- or y-axes, or both, or neither. It is
-# better to think of it as a reflection rather than a rotation,
-# to allow for non-square cells, and also to generalize to
-# higher dimensions.
+# The variety in the pattern is provided by randomly reflecting each
+# cell about the x- or y-axes, or both, or neither. It is better to
+# think of it as a combination of reflections rather than a rotation,
+# to allow for non-square cells, and also to generalize to higher
+# dimensions.
 #
 # Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
