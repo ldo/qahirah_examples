@@ -1,6 +1,17 @@
 #!/usr/bin/python3
 #+
-# Try some Truchet tilings <http://mathworld.wolfram.com/TruchetTiling.html>.
+# Try some Truchet tilings, based on
+# <http://mathworld.wolfram.com/TruchetTiling.html>. The basic
+# principle is that the sides of a rectangular cell are grouped into
+# two pairs of adjacent sides, such that the pattern in each cell will
+# join seamlessly across an adjacent cell where the common sides come
+# from the same pair.
+#
+# The variety in the pattern is provided by randomly reflecting
+# each cell about the x- or y-axes, or both, or neither. It is
+# better to think of it as a reflection rather than a rotation,
+# to allow for non-square cells, and also to generalize to
+# higher dimensions.
 #
 # Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
@@ -235,7 +246,6 @@ del TruchetActions
 def draw_truchet(g : Context, do_tile, total_dimensions : Vector, nr_tiles : Vector) :
     "fills in a Truchet tiling of the specified type and number of tiles within the bounds" \
     " with corners (0, 0) and total_dimensions."
-
     assert nr_tiles.isint() and nr_tiles.x > 0 and nr_tiles.y > 0
     tile_dimensions = total_dimensions / nr_tiles
     save_matrix = g.matrix
@@ -243,12 +253,22 @@ def draw_truchet(g : Context, do_tile, total_dimensions : Vector, nr_tiles : Vec
         for y in range(nr_tiles.y) :
             p1 = tile_dimensions * Vector(x, y)
             p2 = tile_dimensions * Vector(x + 1, y + 1)
-            rotate = random.randrange(4)
+            orient = random.randrange(4)
             g.matrix = \
                 (
                     save_matrix
                 *
-                    Matrix.rotate(angle = rotate * qah.circle / 4, centre = (p1 + p2) / 2)
+                    Matrix.scale
+                      (
+                        factor = Vector((1, -1)[orient & 1 != 0], 1),
+                        centre = (p1 + p2) / 2
+                      )
+                *
+                    Matrix.scale
+                      (
+                        factor = Vector(1, (1, -1)[orient & 2 != 0], ),
+                        centre = (p1 + p2) / 2
+                      )
                 )
             do_tile(g, p1, p2)
         #end for
