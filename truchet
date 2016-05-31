@@ -74,6 +74,11 @@ class TruchetActions :
     " and two opposite corner points of the cell, notionally the top-left" \
     " and bottom-right."
 
+    def dummy_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "just to define the callback action type."
+        pass
+    #end dummy_tile
+
     def diag_tile(g : Context, p1 : Vector, p2 : Vector) :
         "half-filled squares."
         (g
@@ -241,9 +246,10 @@ class TruchetActions :
 #end TruchetActions
 
 truchet_types = TruchetActions.types
+draw_tile_type = type(TruchetActions.dummy_tile)
 del TruchetActions
 
-def draw_truchet(g : Context, do_tile, total_dimensions : Vector, nr_tiles : Vector) :
+def draw_truchet(g : Context, do_tile : draw_tile_type, total_dimensions : Vector, nr_tiles : Vector) :
     "fills in a Truchet tiling of the specified type and number of tiles within the bounds" \
     " with corners (0, 0) and total_dimensions."
     assert nr_tiles.isint() and nr_tiles.x > 0 and nr_tiles.y > 0
