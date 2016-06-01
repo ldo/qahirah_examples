@@ -162,7 +162,40 @@ class TruchetActions :
         )
     #end arc_tile
 
-    def corner_tile(g : Context, p1 : Vector, p2 : Vector) :
+    def double_arc_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "two circular arcs."
+        offset = 0.4
+        mid_radius = abs(p2 - p1) / math.sqrt(8)
+        for radius in \
+            (
+                (mid_radius * (1 - offset)),
+                (mid_radius * (1 + offset)),
+            ) \
+        :
+            (g
+                .arc
+                  (
+                    centre = p1,
+                    radius = radius,
+                    angle1 = 0,
+                    angle2 = 90 * qah.deg,
+                    negative = False
+                  )
+                .stroke()
+                .arc
+                  (
+                    centre = p2,
+                    radius = radius,
+                    angle1 = 180 * qah.deg,
+                    angle2 = 270 * qah.deg,
+                    negative = False
+                  )
+                .stroke()
+            )
+        #end for
+    #end double_arc_tile
+
+    def angular_tile(g : Context, p1 : Vector, p2 : Vector) :
         "angular arc."
         p1a = Vector(p1.x, p2.y)
         p2a = Vector(p2.x, p1.y)
@@ -177,7 +210,7 @@ class TruchetActions :
             .line_to((p2 + p1a) / 2)
             .stroke()
         )
-    #end corner_tile
+    #end angular_tile
 
     def def_diag_stripes_tile(frac : float) :
 
@@ -215,8 +248,23 @@ class TruchetActions :
         )
     #end corner_stripes_tile
 
-    def cross_tile(g : Context, p1 : Vector, p2 : Vector) :
-        "two lines crossing."
+    def symmetric_cross_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "two symmetric lines, crossing."
+        p1a = Vector(p1.x, p2.y)
+        p2a = Vector(p2.x, p1.y)
+        frac = 0.3
+        (g
+            .move_to(p1 + (p2a - p1) * frac)
+            .line_to(p2 + (p1a - p2) * frac)
+            .stroke()
+            .move_to(p1 + (p1a - p1) * frac)
+            .line_to(p2 + (p2a - p2) * frac)
+            .stroke()
+        )
+    #end symmetric_cross_tile
+
+    def corner_cross_tile(g : Context, p1 : Vector, p2 : Vector) :
+        "two lines near one corner, crossing."
         p1a = Vector(p1.x, p2.y)
         p2a = Vector(p2.x, p1.y)
         frac = 0.3
@@ -228,7 +276,7 @@ class TruchetActions :
             .line_to(p1 + (p1a - p1) * frac)
             .stroke()
         )
-    #end cross_tile
+    #end corner_cross_tile
 
     types = \
         [
@@ -236,11 +284,13 @@ class TruchetActions :
             sector_tile,
             hollow_sector_tile,
             arc_tile,
+            double_arc_tile,
             def_diag_stripes_tile(0.5),
             def_diag_stripes_tile(0.8),
-            #corner_tile,
+            angular_tile,
             corner_stripes_tile,
-            cross_tile,
+            symmetric_cross_tile,
+            corner_cross_tile,
         ]
 
 #end TruchetActions
