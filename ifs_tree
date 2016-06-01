@@ -1,0 +1,73 @@
+#!/usr/bin/python3
+#+
+# Generate a tree-like figure from an interated function system.
+# Based on a PostScript program from back in 1988.
+#
+# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+
+def do_pattern(g, nest) :
+    (g
+        .move_to((0, 0))
+        .line_to((0, 1))
+    )
+    if nest > 0 :
+        save_matrix = g.matrix
+        g.translate((0, 1 / 3))
+        g.scale(0.75)
+        g.rotate(30 * qah.deg)
+        do_pattern(g, nest - 1)
+        g.matrix = save_matrix
+        g.translate((0, 2 / 3))
+        g.scale(0.75)
+        g.rotate(-35 * qah.deg)
+        do_pattern(g, nest - 1)
+        g.matrix = save_matrix
+        g.translate((0, 1))
+        g.scale(0.5)
+        g.rotate(45 * qah.deg)
+        do_pattern(g, nest - 1)
+        g.matrix = save_matrix
+    #end if
+#end do_pattern
+
+dpi = 144
+figure_scale = 200
+image_bounds = Vector(600, 450)
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = round(image_bounds * dpi / qah.base_dpi)
+  )
+g = \
+    (qah.Context.create(pix)
+        .scale(dpi / qah.base_dpi)
+        .set_source_colour(Colour.grey(1))
+        .paint()
+        .set_source_colour(Colour.grey(0))
+        .scale(figure_scale)
+        .transform(Matrix.scale((1, -1), centre = (0, 1.1)))
+          # flip from PostScript to Cairo coordinates
+        .set_line_width(0.5 / figure_scale)
+        .translate((1.4, 0.05))
+    )
+do_pattern(g, 10)
+g.stroke()
+  # The original PostScript version had to be careful not to exceed
+  # path-length limits. So do_pattern had to do periodic stroke calls
+  # itself. With Cairo, I don’t have to worry, so I only need one
+  # stroke call at the end.
+
+pix.flush().write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
