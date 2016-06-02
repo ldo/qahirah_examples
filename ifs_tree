@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 #+
 # Generate a tree-like figure from an interated function system.
-# Based on a PostScript program from back in 1988.
 #
 # Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
@@ -16,7 +15,9 @@ from qahirah import \
     CAIRO, \
     Colour, \
     Matrix, \
+    Path, \
     Vector
+Pt = Path.Point
 
 def do_pattern(g, element_action, subtransforms, nest) :
     "general routine for drawing IFS figures. element_action draws the basic" \
@@ -34,7 +35,8 @@ def do_pattern(g, element_action, subtransforms, nest) :
 #edn do_pattern
 
 def do_line_pattern(g, nest) :
-    "draws the original tree pattern."
+    "draws the original tree pattern, from a PostScript program I got from" \
+    " somewhere back in 1988."
 
     def pattern_element_line(g) :
         (g
@@ -75,6 +77,75 @@ def do_line_pattern(g, nest) :
       # stroke call at the end.
 #end do_line_pattern
 
+def do_curvy_pattern(g, nest) :
+    "pattern based on <http://www.jdawiseman.com/2015/20150219_TriangleTree.pdf>" \
+    " by Julian Wiseman, as mentioned in" \
+    " <https://groups.google.com/d/msg/comp.lang.postscript/Y8Txg8MOnNw/SAjM9YHKRrIJ>."
+
+    frac = 0.3
+    thick = Vector(-1, 1) * 0.02
+    curve_seg = Path \
+      (
+        [
+            Path.Segment
+              (
+                [
+                    Pt((frac, 1), False),
+                    Pt(Vector(frac, frac) - thick, True),
+                    Pt(Vector(frac, frac) - thick, True),
+                    Pt((-1, frac), False),
+                    Pt(Vector(frac, frac) + thick, True),
+                    Pt(Vector(frac, frac) + thick, True),
+                ],
+                True
+              ),
+        ]
+      )
+
+    def pattern_element_curvy(g) :
+        g.new_path()
+        for i in range(4) :
+            g.append_path \
+              (
+                curve_seg,
+                    Matrix.rotate(i / 4 * qah.circle)
+                *
+                    Matrix.scale(0.25)
+              )
+        #end for
+        g.fill()
+    #end pattern_element_curvy
+
+#begin do_curvy_pattern
+    save_matrix = g.matrix
+    g.transform \
+      (
+            Matrix.translate((0.5, frac + 0.2))
+        *
+            Matrix.rotate(-30 * qah.deg)
+      )
+    do_pattern \
+      (
+        g = g,
+        element_action = pattern_element_curvy,
+        subtransforms =
+            [
+                    Matrix.scale(0.5)
+                *
+                    Matrix.translate(Vector(frac - 0.15, 1.55) / 2)
+                *
+                    Matrix.rotate(-60 * qah.deg),
+                    Matrix.scale(0.85)
+                *
+                    Matrix.translate(Vector(-0.75, frac + 0.4) / 2)
+                *
+                    Matrix.rotate(30 * qah.deg),
+            ],
+        nest = nest
+      )
+    g.matrix = save_matrix
+#end do_curvy_pattern
+
 dpi = 144
 figure_scale = 200
 image_bounds = Vector(600, 450)
@@ -95,6 +166,7 @@ g = \
         .set_line_width(0.5 / figure_scale)
         .translate((1.4, 0.05))
     )
-do_line_pattern(g, 10)
+#do_line_pattern(g, 10)
+do_curvy_pattern(g, 10)
 
 pix.flush().write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
