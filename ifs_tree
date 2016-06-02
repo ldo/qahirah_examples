@@ -68,6 +68,11 @@ def do_line_pattern(g, nest) :
             ],
         nest = nest
       )
+    g.stroke()
+      # The original PostScript version had to be careful not to exceed
+      # path-length limits. So do_pattern had to do periodic stroke calls
+      # itself. With Cairo, I don’t have to worry, so I only need one
+      # stroke call at the end.
 #end do_line_pattern
 
 dpi = 144
@@ -91,10 +96,5 @@ g = \
         .translate((1.4, 0.05))
     )
 do_line_pattern(g, 10)
-g.stroke()
-  # The original PostScript version had to be careful not to exceed
-  # path-length limits. So do_pattern had to do periodic stroke calls
-  # itself. With Cairo, I don’t have to worry, so I only need one
-  # stroke call at the end.
 
 pix.flush().write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
