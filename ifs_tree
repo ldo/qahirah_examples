@@ -34,6 +34,7 @@ def do_pattern(g, element_action, subtransforms, nest) :
 #edn do_pattern
 
 def do_line_pattern(g, nest) :
+    "draws the original tree pattern."
 
     def pattern_element_line(g) :
         (g
@@ -43,7 +44,6 @@ def do_line_pattern(g, nest) :
     #end pattern_element_line
 
 #begin do_line_pattern
-    "draws the original tree pattern."
     do_pattern \
       (
         g = g,
