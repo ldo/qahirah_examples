@@ -1,0 +1,94 @@
+#!/usr/bin/python3
+#+
+# My attempt to create patterns like those published in
+# BYTE Magazine of September 1978, pages 40-46
+# <https://archive.org/details/byte-magazine-1978-09>.
+#
+# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+
+triangle_corners = list(Vector(1, 0).rotate(a / 3 * qah.circle) for a in range(3))
+triangle_step = Vector(1.5, math.sqrt(3) / 2)
+flip_adjust = Vector(0.5, 0)
+
+pix_size = 700
+figure_size = 150
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_ARGB32,
+    dimensions = round(Vector(1, 1) * pix_size)
+  )
+ctx = \
+    (qah.Context.create(pix)
+        .translate(Vector(0.5, 0.5) * pix_size)
+        .set_source_colour(Colour.grey(1))
+        .paint()
+        .set_source_colour(Colour.grey(0))
+        .set_line_width(2)
+    )
+
+def draw_cell(ctx, reversed, angle, colours) :
+    (ctx
+        .save()
+        .transform(Matrix.rotate(angle) * Matrix.scale(figure_size))
+    )
+    scale_step = 0.87
+    ctx.line_width /= figure_size # compensate for scaling of entire coordinate system
+    for step in range(15) :
+        for i in range(3) :
+            (ctx
+                .new_path()
+                .move_to(triangle_corners[i - 1])
+                .line_to(triangle_corners[i])
+                .set_source_colour(colours[i * (1, -1)[reversed]])
+                .stroke()
+            )
+        #end for
+        (ctx
+            .transform(Matrix.rotate(5 * qah.deg * (1, -1)[reversed]) * Matrix.scale(scale_step))
+        )
+        ctx.line_width /= scale_step
+    #end for
+    ctx.restore()
+#end draw_cell
+
+for row in range(-3, 4) :
+    for col in range(-2, 2) :
+        flip = (row ^ col) & 1
+        (ctx
+            .save()
+            .translate
+              (
+                (Vector(col, row) * triangle_step + flip_adjust * flip) * figure_size
+              )
+        )
+        draw_cell \
+          (
+            ctx = ctx,
+            reversed = False,
+            angle = flip * 180 * qah.deg,
+            colours =
+                [
+                    Colour.from_hsva((0.55, 0.5, 0.4)),
+                    Colour.from_hsva((0.05, 0.5, 0.4)),
+                    Colour.from_hsva((0.8, 0.5, 0.4)),
+                ]
+          )
+        ctx.restore()
+    #end for
+#end for
+
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
