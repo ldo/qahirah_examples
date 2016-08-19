@@ -155,7 +155,14 @@ for op_name in operator_names :
         g.rectangle(draw_bounds)
         g.clip() # to prevent figure from wiping out others
     #end if
-    g.rectangle(Rect.from_dimensions(Vector(minor_dim, major_dim)) + Vector(major_dim - minor_dim, 0) + margin)
+    g.rectangle \
+      (
+            Rect.from_dimensions(Vector(minor_dim, major_dim))
+        +
+            Vector(major_dim - minor_dim, 0)
+        +
+            margin
+      )
     g.source = rect_2_pattern
     g.fill()
     g.scaled_font = use_font
