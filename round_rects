@@ -19,54 +19,6 @@ from qahirah import \
     Vector
 
 #+
-# Miscellaneous useful stuff
-#-
-
-def round_rect(g, bounds, radii) :
-    "appends a rounded-corner rectangle to the current path in the Context g." \
-    " bounds is a Rect defining the bounds of the rectangle, and radii is a Vector" \
-    " defining the horizontal and vertical corner radii."
-    g.new_sub_path() # so first line_to is actually a move_to
-    corner1 = bounds.topleft
-    for side in range(4) :
-        angle = side / 4 * qah.circle
-        step = Vector(1, 0).rotate(angle)
-        corner2 = corner1 + step * bounds.dimensions
-        g.line_to(corner1 + step * radii)
-        g.rel_line_to(step * (bounds.dimensions - 2 * radii))
-        for elt in \
-            (qah.Path.create_arc
-              (
-                centre = (0, 0),
-                radius = 1,
-                angle1 = angle - 90 * qah.deg,
-                angle2 = angle,
-                negative = False
-              )
-                .transform
-                  (
-                        Matrix.translate
-                          (
-                                corner2
-                            +
-                                Vector(1, 1).rotate(angle + 90 * qah.deg) * radii
-                          )
-                    *
-                        Matrix.scale(radii)
-                  )
-                .to_elements()
-            ) \
-        :
-            if elt.type != CAIRO.PATH_MOVE_TO :
-                elt.draw(g)
-            #end if
-        #end for
-        corner1 = corner2
-    #end for
-    g.close_path()
-#end round_rect
-
-#+
 # Mainline
 #-
 
@@ -111,7 +63,7 @@ in \
             (Rect(230, 10, 100, 200), Vector(10, 40)),
         ) \
     :
-        round_rect(g, bounds, radii)
+        g.append_path(qah.Path.create_round_rect(bounds, radii))
         g.source_colour = colour.replace_rgba(a = 0.5)
         g.fill_preserve()
         g.source_colour = colour
