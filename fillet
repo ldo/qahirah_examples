@@ -42,13 +42,11 @@ def make_fillet_path(p0, p1, p2, r) :
     #end if
     inset = abs(r / math.tan((dirn2 - dirn1) / 2))
       # from corner to where fillet circle is tangent to lines
-    len1 = abs(p1 - p0)
-    len2 = abs(p1 - p2)
-    if inset > len1 or inset > len2 :
+    if inset > abs(p1 - p0) or inset > abs(p1 - p2) :
         raise ValueError("lines are too short for fillet")
     #end if
-    t1 = p1 + (p0 - p1) * inset / len1 # fillet tangent point on line (p0, p1)
-    t2 = p1 + (p2 - p1) * inset / len2 # fillet tangent point on line (p2, p1)
+    t1 = p1 + Vector.unit((p0 - p1).angle()) * inset # fillet tangent point on line (p0, p1)
+    t2 = p1 + Vector.unit((p2 - p1).angle()) * inset # fillet tangent point on line (p2, p1)
     # Because dirn1 and dirn2 might have opposite signs, the half-angle between them
     # has to be the lesser of abs(mid_dirn - dirn1) and abs(mid_dirn - dirn2).
     fillet_centre = \
