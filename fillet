@@ -47,8 +47,6 @@ def make_fillet_path(p0, p1, p2, r) :
     #end if
     t1 = p1 + Vector.unit((p0 - p1).angle()) * inset # fillet tangent point on line (p0, p1)
     t2 = p1 + Vector.unit((p2 - p1).angle()) * inset # fillet tangent point on line (p2, p1)
-    # Because dirn1 and dirn2 might have opposite signs, the half-angle between them
-    # has to be the lesser of abs(mid_dirn - dirn1) and abs(mid_dirn - dirn2).
     fillet_centre = \
         (
             p1
