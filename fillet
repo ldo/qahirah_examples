@@ -53,7 +53,7 @@ def make_fillet_path(p0, p1, p2, r) :
         (
             p1
         +
-            r / math.sin(min(abs(mid_dirn - dirn1), abs(mid_dirn - dirn2))) * Vector.unit(mid_dirn)
+            r / abs(math.sin(mid_dirn - dirn1)) * Vector.unit(mid_dirn)
         )
       # position of centre of fillet circle
     g = qah.Context.create_for_dummy()
