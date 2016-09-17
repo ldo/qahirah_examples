@@ -1,0 +1,155 @@
+#!/usr/bin/python3
+#+
+# 1980s-style pixelated limited-palette colour graphics. For added
+# analog flavour, the image is scaled up and masked with simulated
+# raster lines.
+#
+# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+from fractions import \
+    Fraction
+import enum
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+
+@enum.unique
+class COLOUR8(enum.IntEnum) :
+    "how many colours can you get for 3 bits per pixel?"
+    BLACK = 0
+    RED = 1
+    GREEN = 2
+    BLUE = 4
+    YELLOW = RED | GREEN
+    MAGENTA = RED | BLUE
+    CYAN = GREEN | BLUE
+    WHITE = RED | GREEN | BLUE
+
+    @property
+    def colour(self) :
+        "returns the Colour value corresonding to a COLOUR8 code."
+        return \
+            Colour \
+              (*(
+                  tuple(self.value & m != 0 for m in (COLOUR8.RED, COLOUR8.GREEN, COLOUR8.BLUE))
+              +
+                  (1,)
+              ))
+    #end colour
+
+#end COLOUR8
+
+pie_sectors = \
+    [
+        {"val" : 4, "colour" : COLOUR8.RED, "out" : False},
+        {"val" : 3, "colour" : COLOUR8.MAGENTA, "out" : False},
+        {"val" : 2, "colour" : COLOUR8.BLUE, "out" : False},
+        {"val" : 4, "colour" : COLOUR8.CYAN, "out" : False},
+        {"val" : 3, "colour" : COLOUR8.GREEN, "out" : True},
+        {"val" : 5, "colour" : COLOUR8.YELLOW, "out" : False},
+    ]
+
+resolution = Vector(320, 240) # typical monitor resolution from those days
+raster_frac = Fraction(7, 8)
+  # thickness of each raster line relative to distance between them,
+  # must be in [0, 1]
+display_scale = 4 # scale final image up to emphasize jaggies and gaps between raster lines
+srcpix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = resolution
+  )
+ctx = qah.Context.create(srcpix)
+(ctx
+    .set_antialias(CAIRO.ANTIALIAS_NONE) # keep things jaggy
+    .set_operator(CAIRO.OPERATOR_SOURCE)
+    .set_scaled_font
+      (
+        qah.ScaledFont.create
+          (
+            font_face = qah.FontFace.create_for_pattern("nimbus sans:weight=bold"),
+            font_matrix = Matrix.scale(24),
+            ctm = Matrix.identity,
+            options = qah.FontOptions.create(antialias = CAIRO.ANTIALIAS_NONE)
+          )
+      )
+    .set_source_colour(COLOUR8.BLACK.colour)
+    .paint()
+)
+# draw the sample pie chart
+total = sum(s["val"] for s in pie_sectors)
+angle1 = 0
+radius = 100
+for sector in pie_sectors :
+    angle2 = angle1 + sector["val"] / total * qah.circle
+    centre = \
+        (
+            resolution / 2
+        +
+            (Vector(0, 0), Vector(10, 0))[sector["out"]].rotate((angle1 + angle2) / 2)
+        )
+    ctx.source_colour = sector["colour"].colour
+    (ctx
+        .move_to(centre + Vector(1, 0).rotate(angle1) * radius)
+        .arc(centre, radius, angle1, angle2, False)
+        .line_to(centre)
+        .fill()
+    )
+    angle1 = angle2
+#end for
+(ctx
+    .set_source_colour(COLOUR8.WHITE.colour)
+    .move_to((5, 230))
+    .show_text("Some Text") # just to have some text in it
+)
+srcpix.flush()
+mask = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_A8,
+    dimensions = resolution * raster_frac.denominator
+  )
+ctx = \
+    (qah.Context.create(mask)
+        .set_source_colour(Colour.grey(0, 0))
+        .paint()
+        .set_source_colour(Colour.grey(1))
+        .set_line_width(raster_frac.numerator)
+    )
+for row in range(resolution.y) :
+    # fill mask with simulated raster lines
+    (ctx
+        .move_to((0, row * raster_frac.denominator))
+        .rel_line_to((mask.width, 0))
+        .stroke()
+    )
+#end for
+mask.flush()
+#mask.write_to_png("%s_mask.png" % os.path.basename(sys.argv[0])) # debug
+dstpix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = round(resolution * display_scale)
+  )
+(qah.Context.create(dstpix)
+    .set_source
+      (
+        qah.Pattern.create_for_surface(srcpix)
+            .set_matrix(Matrix.scale(srcpix.dimensions / dstpix.dimensions))
+            #.set_filter(CAIRO.FILTER_NEAREST) # looks too sharp with this
+      )
+    .mask
+      (
+        qah.Pattern.create_for_surface(mask)
+            .set_matrix(Matrix.scale(mask.dimensions / dstpix.dimensions))
+      )
+)
+dstpix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
