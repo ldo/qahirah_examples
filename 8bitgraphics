@@ -133,7 +133,6 @@ for row in range(resolution.y) :
     )
 #end for
 mask.flush()
-#mask.write_to_png("%s_mask.png" % os.path.basename(sys.argv[0])) # debug
 dstpix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
