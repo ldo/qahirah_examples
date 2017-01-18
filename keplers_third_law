@@ -1,0 +1,209 @@
+#!/usr/bin/python3
+#+
+# Plotting of orbital distances and periods of various bodies in our
+# Solar System, on the curve corresponding to Kepler’s Third Law,
+# which can be expressed most concisely as ${{R^3} {\\omega^2}} = {G M}$.
+#
+# Copyright 2017 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Rect, \
+    Vector
+
+orbital_constant = 4 * math.pi * math.pi
+  # units: radius in AU (Earth-Sun distance = 1), period in Earth years
+
+def period_from_distance(distance) :
+    "given the distance from the Sun, returns the corresponding orbital period."
+    return \
+        2 * math.pi * math.sqrt((distance ** 3) / orbital_constant)
+#end period_from_distance
+
+def show_centred(g, text) :
+    "draws text horizontally-centred about the current point in qah.Context g."
+    g.rel_move_to((- g.scaled_font.text_extents(text).advance.x / 2, 0))
+    g.show_text(text)
+#end show_centred
+
+# source: <https://en.wikipedia.org/wiki/List_of_gravitationally_rounded_objects_of_the_Solar_System>
+# Cannot fit them all legibly on a single linear scale, so split into “near” and “far”
+# groups, and plot only one
+regular_planets = \
+    [
+        {"name" : "Mercury", "distance" : 0.387, "far" : False},
+        {"name" : "Venus", "distance" : 0.723, "far" : False},
+        {"name" : "Earth", "distance" : 1.0, "far" : False},
+        {"name" : "Mars", "distance" : 1.524, "far" : False},
+        {"name" : "Jupiter", "distance" : 5.20, "far" : None}, # appears in both near and far groups
+        {"name" : "Saturn", "distance" : 9.54, "far" : True},
+        {"name" : "Uranus", "distance" : 19.19, "far" : True},
+        {"name" : "Neptune", "distance" : 30.07, "far" : True},
+    ]
+dwarf_planets = \
+    [ # just a few
+        {"name" : "Ceres", "distance" : 2.766, "far" : False},
+        {"name" : "Haumea", "distance" : 43.34, "far" : True},
+        {"name" : "Makemake", "distance" : 45.79, "far" : True},
+        {"name" : "Pluto", "distance" : 39.48, "far" : True},
+        {"name" : "Eris", "distance" : 67.7, "far" : True},
+    ]
+bodies = sorted(regular_planets + dwarf_planets, key = lambda p : p["distance"])
+far = True # which group to show
+
+data_bounds = \
+    [
+        Rect.from_corners # near
+          (
+            Vector(0, 0),
+            Vector(6, 15)
+          ),
+        Rect.from_corners # far
+          (
+            Vector(0, 0),
+            Vector(70, 600)
+          ),
+    ]
+major_steps = \
+    [
+        Vector(1, 1), # near
+        Vector(10, 50), # far
+    ]
+plot_steps_x = \
+    [
+        0.1, # near
+        2, # far
+    ]
+grid_colour = Colour.from_hsva((0.49, 0.43, 0.5, 1))
+curve_colour = Colour.from_hsva((0.925, 0.7, 0.5, 1))
+marker_colour = curve_colour
+label_colour = Colour.grey(0)
+marker_len = 5
+label_font = \
+    (qah.Context.create_for_dummy()
+        .set_font_face(qah.FontFace.create_for_pattern("sans-serif:weight=bold"))
+        .set_font_size(12)
+    ).scaled_font
+label_font_extents = label_font.font_extents
+label_font_mid_y = (label_font_extents.ascent - label_font_extents.descent) / 2
+
+image_dimensions = Vector(700, 700)
+margin = Vector(80, 80)
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = image_dimensions + 2 * margin
+  )
+data_transform = \
+    (
+        Matrix.scale(factor = (1, -1), centre = image_dimensions / 2)
+    *
+        Matrix.scale(image_dimensions / data_bounds[far].dimensions)
+    )
+ctx = \
+    (qah.Context.create(pix)
+        .set_source_colour(Colour.grey(1))
+        .paint()
+        .translate(margin)
+    )
+
+sys.stdout.write("   Name      Dist    Period\n")
+for body in bodies :
+    if body["far"] != (not far) :
+        sys.stdout.write \
+          (
+                "%-10s  %6.3f  %7.3f\n"
+            %
+                (body["name"], body["distance"], period_from_distance(body["distance"]))
+          )
+    #end if
+#end for
+ctx.scaled_font = label_font
+for i in range(math.floor((data_bounds[far].right - data_bounds[far].left) / major_steps[far].x) + 1) :
+    r = data_bounds[far].left + i * major_steps[far].x
+    (ctx
+        .move_to(data_transform * Vector(r, data_bounds[far].top))
+    )
+    x = ctx.current_point.x
+    ctx.source_colour = grid_colour
+    (ctx
+        .line_to(data_transform * Vector(r, data_bounds[far].bottom))
+        .stroke()
+    )
+    ctx.source_colour = label_colour
+    ctx.move_to((x, image_dimensions.y + label_font_extents.ascent))
+    show_centred(ctx, "%.0f" % r)
+#end for
+for j in range(math.floor((data_bounds[far].bottom - data_bounds[far].top) / major_steps[far].y) + 1) :
+    t = data_bounds[far].top + j * major_steps[far].y
+    (ctx
+        .move_to(data_transform * Vector(data_bounds[far].left, t))
+    )
+    y = ctx.current_point.y
+    ctx.source_colour = grid_colour
+    (ctx
+        .line_to(data_transform * Vector(data_bounds[far].right, t))
+        .stroke()
+    )
+    ctx.source_colour = label_colour
+    label_text = "%.0f" % t
+    (ctx
+        .move_to((0 - label_font.text_extents(label_text + " ").advance.x, y + label_font_mid_y))
+        .show_text(label_text)
+    )
+#end for
+ctx.source_colour = curve_colour
+ctx.new_path().save().transform(data_transform)
+for i in range(math.floor((data_bounds[far].right - data_bounds[far].left) / plot_steps_x[far]) + 1) :
+    x = data_bounds[far].left + i * plot_steps_x[far]
+    y = period_from_distance(x)
+    ctx.line_to((x, y))
+#end for
+ctx.restore().stroke()
+for body in bodies :
+    if body["far"] != (not far) :
+        point = data_transform * Vector(body["distance"], period_from_distance(body["distance"]))
+        (ctx
+            .arc
+              (
+                centre = point,
+                radius = marker_len,
+                angle1 = 0,
+                angle2 = qah.circle,
+                negative = False
+              )
+            .set_source_colour(marker_colour)
+            .fill()
+            .move_to(point)
+            .set_source_colour(label_colour)
+            .show_text(body["name"])
+        )
+    #end if
+#end for
+(ctx
+    .save()
+    .set_font_size(18)
+    .move_to((image_dimensions.x / 2, - label_font_extents.height))
+)
+show_centred(ctx, "R³\u03c9² = GM")
+ctx.restore()
+(ctx
+    .save()
+    .move_to((- margin.x * 0.6, image_dimensions.y / 2))
+    .transform(Matrix.rotate(angle = -90 * qah.deg, centre = ctx.current_point))
+)
+show_centred(ctx, "Orbital Period (Earth Years)")
+ctx.restore()
+ctx.move_to((image_dimensions.x / 2, image_dimensions.y + (label_font_extents.height + label_font_extents.ascent) * 1.2))
+show_centred(ctx, "Distance From Sun (A.U.)")
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
