@@ -4,6 +4,7 @@
 # alignment based on overall font metrics, versus specific text metrics.
 # For the derivation of the formulas used, see the IPython notebook
 # “Beginning Text”
+# <https://gitlab.com/ldo/qahirah_notebooks/blob/master/Beginning%20Text.ipynb>,
 # <https://github.com/ldo/qahirah_notebooks/blob/master/Beginning%20Text.ipynb>.
 #
 # Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
