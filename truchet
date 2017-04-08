@@ -322,7 +322,7 @@ def draw_truchet(g : Context, do_tile : draw_tile_type, total_dimensions : Vecto
                 *
                     Matrix.scale
                       (
-                        factor = Vector(1, (1, -1)[orient & 2 != 0], ),
+                        factor = Vector(1, (1, -1)[orient & 2 != 0]),
                         centre = (p1 + p2) / 2
                       )
                 )
