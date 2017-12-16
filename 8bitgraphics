@@ -36,7 +36,7 @@ class COLOUR8(enum.IntEnum) :
 
     @property
     def colour(self) :
-        "returns the Colour value corresonding to a COLOUR8 code."
+        "returns the Colour value corresponding to a COLOUR8 code."
         return \
             Colour \
               (*(
