@@ -63,14 +63,7 @@ for path_transform, stroke_transform in transform_try :
         )
     g.matrix = figure_bounds.transform_to(dest_rect)
     g.transform(path_transform)
-    g.arc \
-      (
-        centre = figure_dims / 2,
-        radius = max(tuple(figure_dims)) * 0.35,
-        angle1 = 0,
-        angle2 = qah.circle,
-        negative = False
-      )
+    g.circle(figure_dims / 2, max(tuple(figure_dims)) * 0.35)
     g.transform(stroke_transform)
     g.stroke()
     col += 1

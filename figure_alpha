@@ -29,14 +29,7 @@ def draw_figure(g, alpha = 1.0) :
         .save()
         .translate(current_point)
         .new_path()
-        .arc
-          (
-            centre = (0, 0),
-            radius = 50 - line_thick / 2,
-            angle1 = 0,
-            angle2 = qah.circle,
-            negative = False
-          )
+        .circle((0, 0), 50 - line_thick / 2)
         .set_line_width(line_thick)
         .set_source_colour(Colour.x11["dark goldenrod"].replace_rgba(a = alpha))
         .stroke_preserve()

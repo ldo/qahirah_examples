@@ -174,14 +174,7 @@ for body in bodies :
     if body["far"] != (not far) :
         point = data_transform * Vector(body["distance"], period_from_distance(body["distance"]))
         (ctx
-            .arc
-              (
-                centre = point,
-                radius = marker_len,
-                angle1 = 0,
-                angle2 = qah.circle,
-                negative = False
-              )
+            .circle(point, marker_len)
             .set_source_colour(marker_colour)
             .fill()
             .move_to(point)

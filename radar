@@ -43,14 +43,14 @@ g = qah.Context.create(pix).set_matrix(Matrix.translate(Vector(1, 1) * scope_rad
 )
 (g # scope background
     .set_source_colour(bg_colour)
-    .arc(centre = (0, 0), radius = scope_radius, angle1 = 0, angle2 = qah.circle, negative = False)
+    .circle(centre = (0, 0), radius = scope_radius)
     .fill()
 )
 g.source_colour = grid_colour
 g.line_width = 1
 for i in range(nr_radial_steps) :
     # circular grid lines
-    g.arc(centre = (0, 0), radius = (i + 1) / (nr_radial_steps + 1) * scope_radius, angle1 = 0, angle2 = qah.circle, negative = False)
+    g.circle(centre = (0, 0), radius = (i + 1) / (nr_radial_steps + 1) * scope_radius)
     g.stroke()
 #end for
 for i in range(nr_angle_steps) :
@@ -105,7 +105,7 @@ in \
     bogey_pos = Vector(0, - range * scope_radius).rotate(bearing * deg)
     bogey_pat.matrix = (Matrix.translate(bogey_pos) * Matrix.scale(bogey_size)).inv()
     g.set_source(bogey_pat)
-    g.arc(centre = bogey_pos, radius = bogey_size, angle1 = 0, angle2 = qah.circle, negative = False)
+    g.circle(centre = bogey_pos, radius = bogey_size)
     g.fill()
 #end for
 g.transform(Matrix.rotate(trace_pos_angle))
