@@ -98,7 +98,7 @@ text_lines = \
         "qui officia deserunt mollit anim id est laborum.",
     )
 text_size = 18
-height_fudge = 1.3
+height_fudge = 1.4
 line_width = text_size * 25
 margin = 30
 
