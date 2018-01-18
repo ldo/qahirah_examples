@@ -31,7 +31,9 @@ base_colours = \
     )
 # transformations to try:
 lighten = lambda factor : lambda x : 1.0 - (1.0 - x) * factor
+  # returns a function that reduces distance between x and 1.0 by factor
 darken = lambda factor : lambda x : x * factor
+  # returns a function that reduces distance between x and 0.0 by factor
 factor1 = 1 / 3
 factor2 = 2 / 3
 transforms = \
@@ -46,7 +48,7 @@ transforms = \
         lambda c : c.replace_hlsa(l = darken(factor1)),
         lambda c : c.replace_hlsa(l = darken(factor2)),
     )
-swatch_spacing = max(len(transforms) * swatch_radius / math.pi * 0.5, 18)
+swatch_spacing = max(len(transforms) / math.pi * 0.5, 0.5) * swatch_radius
 
 group_dims = Vector(1, 1) * 2 * (3 * swatch_radius + 2 * swatch_spacing)
 nr_cols = math.ceil(math.sqrt(len(base_colours)))
@@ -74,11 +76,9 @@ row = 0
 col = 0
 for base_colour in base_colours :
     pos = margin + Vector(row + 0.5, col + 0.5) * group_dims + colour_spacing * Vector(row, col)
-    (ctx
-        .circle(pos, swatch_radius)
-        .set_source_colour(base_colour)
-        .fill()
-    )
+    ctx.circle(pos, swatch_radius)
+    ctx.source_colour = base_colour
+    ctx.fill()
     for i, transform in enumerate(transforms) :
         ctx.circle \
           (
@@ -92,13 +92,13 @@ for base_colour in base_colours :
                       ),
             radius = swatch_radius
           )
-        ctx.set_source_colour(transform(base_colour))
+        ctx.source_colour = transform(base_colour)
         ctx.fill()
     #end for
-    row += 1
-    if row == nr_rows :
-        col += 1
-        row = 0
+    col += 1
+    if col == nr_cols :
+        row += 1
+        col = 0
     #end if
 #end for
 
