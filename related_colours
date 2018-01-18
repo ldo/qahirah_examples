@@ -1,0 +1,96 @@
+#!/usr/bin/python3
+#+
+# Qahirah example: demonstration of deriving colours related in some way
+# to a given colour.
+#
+# Copyright 2018 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Vector
+
+swatch_radius = 36
+swatch_spacing = 18
+colour_spacing = 36
+margin = Vector(10, 10)
+
+base_colours = \
+    (
+        Colour.from_hsva((0.35, 0.5, 0.5)),
+        Colour.from_hsva((0.75, 0.5, 0.5)),
+        Colour.from_hsva((0.15, 0.5, 0.5)),
+        Colour.from_hsva((0.5, 0.5, 0.5)),
+    )
+# transformations to try:
+lighten = lambda x : 1.0 - (1.0 - x) * 0.5
+darken = lambda x : x * 0.5
+transforms = \
+    (
+        lambda c : c.replace_hlsa(s = lighten),
+        lambda c : c.replace_hlsa(s = darken),
+        lambda c : c.replace_hlsa(h = lambda h : h + 0.5), # complementary colour
+        lambda c : c.replace_hlsa(l = lighten),
+        lambda c : c.replace_hlsa(l = darken),
+    )
+
+group_dims = Vector(1, 1) * 2 * (3 * swatch_radius + 2 * swatch_spacing)
+nr_cols = math.ceil(math.sqrt(len(base_colours)))
+nr_rows = math.ceil(len(base_colours) / nr_cols)
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions =
+            group_dims * Vector(nr_cols, nr_rows)
+        +
+            colour_spacing * Vector(nr_cols - 1, nr_rows - 1)
+        +
+            2 * margin
+  )
+ctx = \
+    (qah.Context.create(pix)
+        .set_source_colour(Colour.grey(1))
+        .paint()
+    )
+
+row = 0
+col = 0
+for base_colour in base_colours :
+    pos = margin + Vector(row + 0.5, col + 0.5) * group_dims + colour_spacing * Vector(row, col)
+    (ctx
+        .circle(pos, swatch_radius)
+        .set_source_colour(base_colour)
+        .fill()
+    )
+    for i, transform in enumerate(transforms) :
+        ctx.circle \
+          (
+            centre =
+                    pos
+                +
+                    Vector.from_polar
+                      (
+                        length = 2 * swatch_radius + swatch_spacing,
+                        angle = (i / len(transforms) - 0.25) * qah.circle
+                      ),
+            radius = swatch_radius
+          )
+        ctx.set_source_colour(transform(base_colour))
+        ctx.fill()
+    #end for
+    row += 1
+    if row == nr_rows :
+        col += 1
+        row = 0
+    #end if
+#end for
+
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
