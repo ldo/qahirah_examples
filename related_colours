@@ -19,28 +19,34 @@ from qahirah import \
     Vector
 
 swatch_radius = 36
-swatch_spacing = 18
 colour_spacing = 36
 margin = Vector(10, 10)
 
 base_colours = \
     (
-        Colour.from_hsva((0.35, 0.5, 0.5)),
-        Colour.from_hsva((0.75, 0.5, 0.5)),
-        Colour.from_hsva((0.15, 0.5, 0.5)),
-        Colour.from_hsva((0.5, 0.5, 0.5)),
+        Colour.from_hsva((0.35, 0.5, 0.75)),
+        Colour.from_hsva((0.75, 0.5, 0.75)),
+        Colour.from_hsva((0.15, 0.5, 0.75)),
+        Colour.from_hsva((0.5, 0.5, 0.75)),
     )
 # transformations to try:
-lighten = lambda x : 1.0 - (1.0 - x) * 0.5
-darken = lambda x : x * 0.5
+lighten = lambda factor : lambda x : 1.0 - (1.0 - x) * factor
+darken = lambda factor : lambda x : x * factor
+factor1 = 1 / 3
+factor2 = 2 / 3
 transforms = \
     (
-        lambda c : c.replace_hlsa(s = lighten),
-        lambda c : c.replace_hlsa(s = darken),
+        lambda c : c.replace_hlsa(s = lighten(factor1)),
+        lambda c : c.replace_hlsa(s = lighten(factor2)),
+        lambda c : c.replace_hlsa(s = darken(factor1)),
+        lambda c : c.replace_hlsa(s = darken(factor2)),
         lambda c : c.replace_hlsa(h = lambda h : h + 0.5), # complementary colour
-        lambda c : c.replace_hlsa(l = lighten),
-        lambda c : c.replace_hlsa(l = darken),
+        lambda c : c.replace_hlsa(l = lighten(factor1)),
+        lambda c : c.replace_hlsa(l = lighten(factor2)),
+        lambda c : c.replace_hlsa(l = darken(factor1)),
+        lambda c : c.replace_hlsa(l = darken(factor2)),
     )
+swatch_spacing = max(len(transforms) * swatch_radius / math.pi * 0.5, 18)
 
 group_dims = Vector(1, 1) * 2 * (3 * swatch_radius + 2 * swatch_spacing)
 nr_cols = math.ceil(math.sqrt(len(base_colours)))
@@ -49,11 +55,14 @@ pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_RGB24,
     dimensions =
-            group_dims * Vector(nr_cols, nr_rows)
-        +
-            colour_spacing * Vector(nr_cols - 1, nr_rows - 1)
-        +
-            2 * margin
+        round
+          (
+                group_dims * Vector(nr_cols, nr_rows)
+            +
+                colour_spacing * Vector(nr_cols - 1, nr_rows - 1)
+            +
+                2 * margin
+          )
   )
 ctx = \
     (qah.Context.create(pix)
