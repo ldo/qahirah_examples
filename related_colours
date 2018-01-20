@@ -75,7 +75,7 @@ ctx = \
 row = 0
 col = 0
 for base_colour in base_colours :
-    pos = margin + Vector(row + 0.5, col + 0.5) * group_dims + colour_spacing * Vector(row, col)
+    pos = margin + Vector(col + 0.5, row + 0.5) * group_dims + colour_spacing * Vector(col, row)
     ctx.circle(pos, swatch_radius)
     ctx.source_colour = base_colour
     ctx.fill()
