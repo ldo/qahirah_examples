@@ -7,7 +7,7 @@
 # of November 1982, page 119
 # <https://archive.org/details/byte-magazine-1982-11>.
 #
-# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# Copyright 2016, 2018 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
 # <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
 # what you will.
@@ -43,7 +43,7 @@ ctx = \
         .set_line_width(2)
     )
 
-def draw_cell(ctx, reversed, angle, colours) :
+def draw_cell(ctx, angle, colours) :
     (ctx
         .save()
         .transform(Matrix.rotate(angle) * Matrix.scale(figure_size))
@@ -56,12 +56,12 @@ def draw_cell(ctx, reversed, angle, colours) :
                 .new_path()
                 .move_to(triangle_corners[i - 1])
                 .line_to(triangle_corners[i])
-                .set_source_colour(colours[i * (1, -1)[reversed]])
+                .set_source_colour(colours[i])
                 .stroke()
             )
         #end for
         (ctx
-            .transform(Matrix.rotate(5 * qah.deg * (1, -1)[reversed]) * Matrix.scale(scale_step))
+            .transform(Matrix.rotate(5 * qah.deg) * Matrix.scale(scale_step))
         )
         ctx.line_width /= scale_step
     #end for
@@ -81,7 +81,6 @@ for row in range(-3, 4) :
         draw_cell \
           (
             ctx = ctx,
-            reversed = False,
             angle = flip * 180 * qah.deg,
             colours =
                 [
