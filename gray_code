@@ -1,0 +1,108 @@
+#!/usr/bin/python3
+#+
+# Generate a disc with a Gray code <https://en.wikipedia.org/wiki/Gray_code>
+# pattern on it.
+#
+# Copyright 2018 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Vector
+
+def gray_code(nrbits, flip) :
+    "generator which yields successive tuples of length nrbits" \
+    " with elements which are either False or True, in Gray code order."
+    if nrbits > 0 :
+        for mybit in (False, True) :
+            for rest in gray_code(nrbits - 1, mybit) :
+                yield (mybit != flip,) + rest
+            #end for
+        #end for
+    else :
+        yield ()
+    #end if
+#end gray_code
+
+#+
+# Mainline
+#-
+
+# configuration parameters (can be changed)
+nr_bits = 10
+strip_width = 24
+radius_ratio = 4
+dpi = 72
+
+# derived parameters from above
+outer_radius = (strip_width * nr_bits) * radius_ratio / (radius_ratio - 1)
+inner_radius = outer_radius / radius_ratio
+nr_steps = 1 << nr_bits
+also_stroke = True
+  # stroke as well as fill strip arcs, to avoid gaps between filled areas.
+  # Try setting this to False to see what I mean.
+
+pix = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_ARGB32,
+    dimensions = Vector(1, 1) * round(outer_radius * 2 * dpi / qah.base_dpi)
+  )
+ctx = \
+    (qah.Context.create(pix)
+        .scale(dpi / qah.base_dpi)
+        .translate(Vector(1, 1) * outer_radius)
+        .rotate(-90 * qah.deg) # start from top rather than right
+        .set_source_colour(Colour.grey(0, 0))
+        .paint()
+    )
+code = list(gray_code(nr_bits, False))
+colours = (Colour.grey(1), Colour.grey(0)) # for False and True respectively
+if also_stroke :
+    ctx.set_line_width(0.5 * qah.base_dpi / dpi)
+      # half a pixel, just to fill in gaps between filled areas
+#end if
+for step in range(nr_steps) :
+    angle1 = step / nr_steps * qah.circle
+    angle2 = (step + 1) / nr_steps * qah.circle
+    pattern = code[step] # or try tuple(reversed(code[step]))
+    for strip in range(nr_bits) :
+        radius1 = inner_radius + (outer_radius - inner_radius) * strip / nr_bits
+        radius2 = inner_radius + (outer_radius - inner_radius) * (strip + 1) / nr_bits
+        (ctx
+            .new_path()
+            .move_to(Vector.from_polar(radius1, angle1))
+            .arc
+              (
+                centre = (0, 0),
+                radius = radius1,
+                angle1 = angle1,
+                angle2 = angle2,
+                negative = False
+              )
+            .line_to(Vector.from_polar(radius2, angle2))
+            .arc
+              (
+                centre = (0, 0),
+                radius = radius2,
+                angle1 = angle2,
+                angle2 = angle1,
+                negative = True
+              )
+            .close_path()
+            .set_source_colour(colours[pattern[strip]])
+        )
+        if also_stroke :
+            ctx.stroke_preserve()
+        #end if
+        ctx.fill()
+    #end for
+#end for
+
+pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
