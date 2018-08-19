@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 #+
-# Generate a disc with a Gray code <https://en.wikipedia.org/wiki/Gray_code>
-# pattern on it.
+# Generate discs with a Gray code <https://en.wikipedia.org/wiki/Gray_code>.
 #
 # Copyright 2018 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
@@ -11,98 +10,158 @@
 
 import sys
 import os
+import math
 import qahirah as qah
 from qahirah import \
     CAIRO, \
     Colour, \
     Vector
 
-def gray_code(nrbits, flip) :
-    "generator which yields successive tuples of length nrbits" \
-    " with elements which are either False or True, in Gray code order."
-    if nrbits > 0 :
-        for mybit in (False, True) :
-            for rest in gray_code(nrbits - 1, mybit) :
-                yield (mybit != flip,) + rest
+def gray_n_code(rotate, base, nr_digits, flip) :
+    "generator which yields successive tuples of length nr_digits" \
+    " with elements from range(base), in Gray code order. Two modes" \
+    " of Gray code can be generated: if rotate is False, then each" \
+    " subsequence is mirrored when the next more significatn digit" \
+    " changes (flip mode). Otherwise, the subsequence is shifted by" \
+    " one, so the last element is the same as the start element of the" \
+    " next repeat (rotate mode). Flip mode only works properly" \
+    " (having just one bit shift at each step) for even bases, while" \
+    " rotate mode works equally well for even and odd bases."
+    if nr_digits > 0 :
+        for my_digit in range(base) :
+            if rotate :
+                flip_rest = my_digit
+            else :
+                flip_rest = flip * (base & 1) != (my_digit & 1 != 0)
+            #end if
+            for rest in gray_n_code(rotate, base, nr_digits - 1, flip_rest) :
+                if rotate :
+                    first = (my_digit - flip) % base
+                else :
+                    first = (my_digit, base - my_digit - 1)[flip]
+                #end if
+                yield (first,) + rest
             #end for
         #end for
     else :
         yield ()
     #end if
-#end gray_code
+#end gray_n_code
+
+def code_colours(base) :
+    "what colours to use for representing the different digits of the code."
+    return \
+        tuple \
+          (
+            Colour.grey(1 - i) for i in qah.distribute(base - 1, endincl = True)
+          ) # simple set of greyscale steps for now
+#end code_colours
 
 #+
 # Mainline
 #-
 
 # configuration parameters (can be changed)
-nr_bits = 10
-strip_width = 24
+figure_params = \
+    (
+        {"base" : 2, "digits" : 5, "rotate" : False},
+        {"base" : 3, "digits" : 4, "rotate" : True},
+        {"base" : 5, "digits" : 3, "rotate" : True},
+        {"base" : 4, "digits" : 4, "rotate" : False},
+        {"base" : 4, "digits" : 4, "rotate" : True},
+        {"base" : 6, "digits" : 3, "rotate" : False},
+    )
+
+outer_radius = 160
 radius_ratio = 4
 dpi = 72
+stroke_width = 0.75
+  # in pixels, nonzero to stroke as well as fill strip arcs, to avoid gaps
+  # between filled areas. Try setting this to 0 to see what I mean.
+margin = Vector(10, 10)
 
 # derived parameters from above
-outer_radius = (strip_width * nr_bits) * radius_ratio / (radius_ratio - 1)
 inner_radius = outer_radius / radius_ratio
-nr_steps = 1 << nr_bits
-also_stroke = True
-  # stroke as well as fill strip arcs, to avoid gaps between filled areas.
-  # Try setting this to False to see what I mean.
+figure_dimensions = Vector(2, 2) * outer_radius
+
+nr_cols = math.ceil(math.sqrt(len(figure_params)))
+nr_rows = math.ceil(len(figure_params) / nr_cols)
 
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_ARGB32,
-    dimensions = Vector(1, 1) * round(outer_radius * 2 * dpi / qah.base_dpi)
+    dimensions = round
+      (
+            (Vector(nr_cols, nr_rows) * (figure_dimensions + margin) + margin)
+        *
+            dpi / qah.base_dpi
+      )
   )
+
 ctx = \
     (qah.Context.create(pix)
         .scale(dpi / qah.base_dpi)
-        .translate(Vector(1, 1) * outer_radius)
-        .rotate(-90 * qah.deg) # start from top rather than right
         .set_source_colour(Colour.grey(0, 0))
         .paint()
     )
-code = list(gray_code(nr_bits, False))
-colours = (Colour.grey(1), Colour.grey(0)) # for False and True respectively
-if also_stroke :
-    ctx.set_line_width(0.5 * qah.base_dpi / dpi)
-      # half a pixel, just to fill in gaps between filled areas
+
+row = 0
+col = 0
+if stroke_width != 0 :
+    ctx.set_line_width(stroke_width * qah.base_dpi / dpi)
 #end if
-for step in range(nr_steps) :
-    angle1 = step / nr_steps * qah.circle
-    angle2 = (step + 1) / nr_steps * qah.circle
-    pattern = code[step] # or try tuple(reversed(code[step]))
-    for strip in range(nr_bits) :
-        radius1 = inner_radius + (outer_radius - inner_radius) * strip / nr_bits
-        radius2 = inner_radius + (outer_radius - inner_radius) * (strip + 1) / nr_bits
-        (ctx
-            .new_path()
-            .move_to(Vector.from_polar(radius1, angle1))
-            .arc
-              (
-                centre = (0, 0),
-                radius = radius1,
-                angle1 = angle1,
-                angle2 = angle2,
-                negative = False
-              )
-            .line_to(Vector.from_polar(radius2, angle2))
-            .arc
-              (
-                centre = (0, 0),
-                radius = radius2,
-                angle1 = angle2,
-                angle2 = angle1,
-                negative = True
-              )
-            .close_path()
-            .set_source_colour(colours[pattern[strip]])
-        )
-        if also_stroke :
-            ctx.stroke_preserve()
-        #end if
-        ctx.fill()
+for params in figure_params :
+    ctx.save()
+    (ctx
+        .translate(Vector(col, row) * (figure_dimensions + margin) + margin)
+        .translate(Vector(1, 1) * outer_radius)
+        .rotate(-90 * qah.deg) # start from top rather than right
+    )
+    code = list(gray_n_code(params["rotate"], params["base"], params["digits"], False))
+    colours = code_colours(params["base"])
+    nr_steps = len(code)
+    for step in range(nr_steps) :
+        angle1 = step / nr_steps * qah.circle
+        angle2 = (step + 1) / nr_steps * qah.circle
+        pattern = code[step] # or try tuple(reversed(code[step]))
+        for strip in range(params["digits"]) :
+            radius1 = inner_radius + (outer_radius - inner_radius) * strip / params["digits"]
+            radius2 = inner_radius + (outer_radius - inner_radius) * (strip + 1) / params["digits"]
+            (ctx
+                .new_path()
+                .move_to(Vector.from_polar(radius1, angle1))
+                .arc
+                  (
+                    centre = (0, 0),
+                    radius = radius1,
+                    angle1 = angle1,
+                    angle2 = angle2,
+                    negative = False
+                  )
+                .line_to(Vector.from_polar(radius2, angle2))
+                .arc
+                  (
+                    centre = (0, 0),
+                    radius = radius2,
+                    angle1 = angle2,
+                    angle2 = angle1,
+                    negative = True
+                  )
+                .close_path()
+                .set_source_colour(colours[pattern[strip]])
+            )
+            if stroke_width != 0 :
+                ctx.stroke_preserve()
+            #end if
+            ctx.fill()
+        #end for
     #end for
+    ctx.restore()
+    col += 1
+    if col == nr_cols :
+        col = 0
+        row += 1
+    #end if
 #end for
 
 pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
