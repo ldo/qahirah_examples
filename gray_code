@@ -21,7 +21,7 @@ def gray_n_code(rotate, base, nr_digits, flip) :
     "generator which yields successive tuples of length nr_digits" \
     " with elements from range(base), in Gray code order. Two modes" \
     " of Gray code can be generated: if rotate is False, then each" \
-    " subsequence is mirrored when the next more significatn digit" \
+    " subsequence is mirrored when the next more significant digit" \
     " changes (flip mode). Otherwise, the subsequence is shifted by" \
     " one, so the last element is the same as the start element of the" \
     " next repeat (rotate mode). Flip mode only works properly" \
