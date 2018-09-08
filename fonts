@@ -50,8 +50,8 @@ for font_name in font_names :
     for name, suffix in \
         (
             ("italic", ":slant=italic"),
-            ("bold", ":weight=bold"),
-            ("bold-italic", ":slant=italic:weight=bold"),
+            ("bold", ":weight=200"),
+            ("bold-italic", ":slant=italic:weight=200"),
         ) \
     :
         g.font_face = qah.FontFace.create_for_pattern(font_name + suffix)

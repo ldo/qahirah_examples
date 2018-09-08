@@ -91,7 +91,7 @@ label_colour = Colour.grey(0)
 marker_len = 5
 label_font = \
     (qah.Context.create_for_dummy()
-        .set_font_face(qah.FontFace.create_for_pattern("sans-serif:weight=bold"))
+        .set_font_face(qah.FontFace.create_for_pattern("sans-serif:weight=200"))
         .set_font_size(12)
     ).scaled_font
 label_font_extents = label_font.font_extents

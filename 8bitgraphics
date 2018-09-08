@@ -76,7 +76,7 @@ ctx = qah.Context.create(srcpix)
       (
         qah.ScaledFont.create
           (
-            font_face = qah.FontFace.create_for_pattern("nimbus sans:weight=bold"),
+            font_face = qah.FontFace.create_for_pattern("nimbus sans:weight=200"),
             font_matrix = Matrix.scale(24),
             ctm = Matrix.identity,
             options = qah.FontOptions.create(antialias = CAIRO.ANTIALIAS_NONE)

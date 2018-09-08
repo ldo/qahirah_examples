@@ -38,7 +38,7 @@ the_pattern = qah.Pattern.create_linear \
     )
 use_font = \
     (qah.Context.create_for_dummy()
-        .set_font_face(qah.FontFace.create_for_pattern("serif:weight=bold"))
+        .set_font_face(qah.FontFace.create_for_pattern("serif:weight=200"))
         .set_font_size(72)
     ).scaled_font
 the_text = "Ooh! Shiny!"
