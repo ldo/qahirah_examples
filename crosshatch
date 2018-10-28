@@ -52,7 +52,7 @@ def crosshatch(dims, components, angle) :
     surf.flush()
     return \
         (qah.Pattern.create_for_surface(surf)
-            .set_matrix(Matrix.rotate(- angle))
+            .set_matrix(Matrix.rotate(- angle)) # negate angle for inverse matrix
             .set_extend(CAIRO.EXTEND_REPEAT)
         )
 #end crosshatch
