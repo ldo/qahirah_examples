@@ -547,6 +547,7 @@ ctx.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NO
 ctx.set_font_size(label_font_size)
 label_font = ctx.scaled_font
 label_text_height = ctx.font_extents.height
+label_text_ascent = ctx.font_extents.ascent
 figure_plus_label_dimensions = figure_dimensions + Vector(0, label_text_height + label_margin)
 
 pix = qah.ImageSurface.create \
@@ -603,7 +604,7 @@ for pattern in patterns :
                 Vector
                   (
                     - ctx.text_extents(pattern["name"]).x_advance / 2,
-                    label_margin + label_text_height
+                    label_margin + label_text_ascent
                   )
           )
         .show_text(pattern["name"])
