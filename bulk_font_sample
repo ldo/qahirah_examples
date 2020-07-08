@@ -1,0 +1,196 @@
+#!/usr/bin/python3
+#+
+# Example use of Qahirah: render some sample text in a bunch
+# of different fonts. Invoke this script as follows:
+#
+#     bulk_font_sample «outfilename» «font_spec» [«font_spec» ...]
+#
+# where «outfilename» is the name of the output PDF or PostScript file
+# to generate, with one page for each font being sampled, and the
+# «font_spec»s can each be a Fontconfig pattern, a .ttf or .otf font
+# file name, or a .zip archive name containing .ttf or .otf font files.
+#
+# Copyright 2020 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import tempfile
+import subprocess
+import shutil
+import getopt
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+import freetype2 as freetype
+FT = freetype.FT
+ft = qah.get_ft_lib() # might as well use same one
+
+fontfile_extensions = (".otf", ".ttf")
+
+text_lines = \
+    (
+        "Lorem ipsum dolor sit amet, consectetur",
+        "adipiscing elit, sed do eiusmod tempor",
+        "incididunt ut labore et dolore magna aliqua.",
+        "Ut enim ad minim veniam, quis nostrud",
+        "exercitation ullamco laboris nisi ut aliquip",
+        "ex ea commodo consequat. Duis aute irure dolor",
+        "in reprehenderit in voluptate velit esse cillum",
+        "dolore eu fugiat nulla pariatur. Excepteur sint",
+        "occaecat cupidatat non proident, sunt in culpa",
+        "qui officia deserunt mollit anim id est laborum.",
+    )
+
+#+
+# Mainline
+#-
+
+margin = Vector(10, 10)
+text_size = 18 # default
+line_spacing = 1.1
+title_font_name = "serif" # something acceptable to toy font face API only for now
+
+opts, args = getopt.getopt \
+  (
+    sys.argv[1:],
+    "",
+    ["size=", "spacing="]
+  )
+for keyword, value in opts :
+    if keyword == "--size" :
+        text_size = float(value)
+    elif keyword == "--spacing" :
+        line_spacing = float(value)
+    #end if
+#end for
+if len(args) < 2 :
+    raise getopt.GetoptError("need at least two args, the output filename and one or more font specs")
+#end if
+outfilename = args[0]
+fontspecs = args[1:]
+if outfilename.endswith(".pdf") :
+    SurfaceClass = qah.PDFSurface
+elif outfilename.endswith(".ps") :
+    SurfaceClass = qah.PSSurface
+else :
+    raise getopt.GetoptError("output filename must end in .pdf or .ps")
+#end if
+title_size = text_size * 1.5
+title_font = \
+    (qah.Context.create_for_dummy()
+        .select_font_face(title_font_name, CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+        .set_font_size(title_size)
+    ).scaled_font
+max_title_ascender = title_font.font_extents.ascent
+max_title_descender = title_font.font_extents.descent
+
+pix = SurfaceClass.create(outfilename, (0, 0))
+ctx = qah.Context.create(pix)
+
+def make_sample(fontspec, isfontfile) :
+    try :
+        if isfontfile or fontspec.find("/") >= 0 or fontspec.endswith(fontfile_extensions) :
+            # interpret as filename
+            ft_face = ft.new_face(fontspec)
+        else :
+            ft_face = ft.find_face(fontspec)
+        #end if
+    except freetype.FTException as fail :
+        sys.stderr.write("%s -- trying to load font spec “%s”\n" % (fail.args[0], fontspec))
+        ft_face = None
+    #end try
+    if ft_face != None :
+        show_face = qah.FontFace.create_for_ft_face(ft_face)
+        title = "%s %s" % (ft_face.family_name, ft_face.style_name)
+        show_font = \
+            (qah.Context.create_for_dummy()
+                .set_font_face(show_face)
+                .set_font_size(text_size)
+            ).scaled_font
+        page_dims = \
+          (
+                margin
+            +
+                Vector(0, title_font.font_extents.height)
+            +
+                margin
+            +
+                Vector
+                  (
+                    x = max
+                      (
+                        max(show_font.text_extents(l).width for l in text_lines),
+                        title_font.text_extents(title).width
+                      ),
+                    y = show_font.font_extents.height * line_spacing * len(text_lines)
+                  )
+            +
+                margin
+          )
+        pix.set_size(page_dims)
+        ctx.save()
+        ctx.translate(margin)
+        ctx.scaled_font = title_font
+        ctx.move_to((0, max_title_ascender))
+        ctx.show_text(title)
+        ctx.scaled_font = show_font
+        ctx.move_to \
+          ((
+            0,
+            max_title_ascender + max_title_descender + margin.y + show_font.font_extents.ascent
+          ))
+        for line in text_lines :
+            save_pos = ctx.current_point
+            ctx.show_text(line)
+            ctx.move_to(save_pos + Vector(0, show_font.font_extents.height * line_spacing))
+        #end for
+        ctx.restore()
+        pix.show_page()
+    #end if
+#end make_sample
+
+for fontspec in fontspecs :
+    if fontspec.endswith(".zip") :
+        temp_dir = tempfile.mkdtemp(prefix = "font_sample-")
+        try :
+            subprocess.check_call \
+              (
+                args = ("unar", "-q", "-D", os.path.abspath(fontspec)),
+                  # interesting that “-qD” isn’t accepted...
+                cwd = temp_dir
+              )
+            outbasename, outext = os.path.splitext(outfilename)
+
+            def scan_dir(parent) :
+                for item in os.listdir(parent) :
+                    child = os.path.join(parent, item)
+                    if item.endswith(fontfile_extensions) :
+                        make_sample(child, True)
+                    elif os.path.isdir(child) :
+                        scan_dir(child)
+                    else :
+                        sys.stderr.write("ignore archive member “%s”\n" % item)
+                    #end if
+                #end for
+            #end scan_dir
+
+            scan_dir(temp_dir)
+        finally :
+            try :
+                shutil.rmtree(temp_dir)
+            except OSError :
+                pass
+            #end try
+        #end try
+    else :
+        make_sample(fontspec, False)
+    #end if
+#end for
+ctx = pix = None # no explicit flush call!
