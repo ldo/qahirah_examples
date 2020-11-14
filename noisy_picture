@@ -181,7 +181,6 @@ dst = make_sample_image()
 noise_strength = 0.5
   # feel free to play with this
   # useful values range from 0 - no noise, to 1 - pure noise, image disappears
-noise_pat = make_noise_pat() # why does it segfault if I substitute call directly below?
 mask = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_A8,
@@ -193,7 +192,7 @@ mask = qah.ImageSurface.create \
     .paint()
 )
 (qah.Context.create(dst)
-    .set_source(noise_pat)
+    .set_source(make_noise_pat())
     .mask_surface(mask, (0, 0))
 )
 dst \
