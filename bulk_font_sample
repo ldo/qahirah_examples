@@ -32,6 +32,24 @@ import freetype2 as freetype
 FT = freetype.FT
 ft = qah.get_ft_lib() # might as well use same one
 
+#+
+# Useful stuff
+#-
+
+def ensure_reasonable_umask() :
+    "ensures that the umask is set to a reasonable value, namely" \
+    " that user always has read+write+execute access to files that" \
+    " they create, while leaving the group- and other-access bits" \
+    " unchanged. Returns the previous and new umask values, for" \
+    " reference."
+    ensure_clear_in_umask = 0o700
+    oldmask = os.umask(0o077)
+      # temporarily set to some safe value
+    newmask = oldmask & ~ensure_clear_in_umask
+    os.umask(newmask)
+    return oldmask, newmask
+#end ensure_reasonable_umask
+
 fontfile_extensions = (".otf", ".ttf")
 
 text_lines = \
@@ -52,6 +70,7 @@ text_lines = \
 # Mainline
 #-
 
+ensure_reasonable_umask()
 margin = Vector(10, 10)
 text_size = 18 # default
 line_spacing = 1.1
