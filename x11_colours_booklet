@@ -1,0 +1,155 @@
+#!/usr/bin/python3
+#+
+# Example use of Qahirah: produce a PDF booklet of swatches for all X11 colours.
+#
+# Copyright 2021 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# This script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Vector
+
+def better_name(name1, name2) :
+    "is name1 to be preferred over name2 for a colour name."
+    # Some colours have two names: one all lowercase with spaces between words,
+    # the other camelcase without spaces. However, there are also some additional
+    # related colours with numeric suffixes; the base names are camelcase without spaces.
+    # Anyway, I prefer the lowercase-with-spaces forms where available, for now.
+    return \
+        (name1.find(" ") > -1) > (name2.find(" ") > -1)
+#end better_name
+
+swatch_dims = Vector(1, 1) * 96
+margin = Vector(25, 40)
+swatch_grid = Vector(6, 10)
+
+# options for controlling output
+include_all_colour_names = True # set to False to only use “best” name for each colour
+nr_hue_buckets = 14
+  # nr of groups of colours by similar hues, set to None to not group colours by hue buckets
+
+colour_names = {} # mapping from Colour to name
+if include_all_colour_names :
+    for name in sorted(Colour.x11.keys()) :
+        colour = tuple(Colour.x11[name])
+        if colour not in colour_names :
+            colour_names[colour] = []
+        #end if
+        colour_names[colour].append(name)
+    #end for
+    for colour in colour_names :
+        colour_names[colour] = "/".join(colour_names[colour])
+    #end for
+else:
+    # only include one name for each colour
+    for name in Colour.x11 :
+        colour = tuple(Colour.x11[name])
+        if colour not in colour_names or better_name(name, colour_names[colour]) :
+            colour_names[colour] = name
+        #end if
+    #end for
+#end if
+
+def order_colour(c) :
+    c = c.to_hsva()
+    assert c[3] == 1
+    return \
+        (
+            (
+                lambda : c[0],
+                lambda : round(c[0] * nr_hue_buckets) / nr_hue_buckets,
+            )[nr_hue_buckets != None](),
+            c[1],
+            c[2],
+        )
+#end order_colour
+
+colours = sorted \
+  (
+    ((colour_names[c], Colour(*c)) for c in colour_names),
+    key = lambda c : order_colour(c[1])
+  )
+
+nr_colours = len(colours)
+colours_per_page = swatch_grid.x * swatch_grid.y
+nr_pages = math.ceil(nr_colours / colours_per_page)
+sys.stderr.write("nr colour names = %d, unique nr colours = %d, nr pages = %d\n" % (len(Colour.x11), nr_colours, nr_pages)) # debug
+swatch_step = swatch_dims + margin
+
+output = qah.PDFSurface.create \
+  (
+    filename = "%s.pdf" % os.path.basename(sys.argv[0]),
+    dimensions_in_points = swatch_grid * swatch_step + margin
+  )
+gx = \
+    (qah.Context.create(output)
+        .set_font_face(qah.FontFace.create_for_pattern("avant garde:weight=bold"))
+        .set_font_size(10)
+    )
+colours_iter = iter(colours)
+page_started = False
+while True :
+    colour = next(colours_iter, None)
+    if colour == None :
+        output.show_page()
+        break
+    #end if
+    if not page_started :
+        gx.source_colour = Colour.grey(1)
+        gx.paint()
+        page_started = True
+        row = col = 0
+    #end if
+    swatch_pos = Vector(col, row) * swatch_step + margin
+    label1 = colour[0]
+    label2 = "(h,s,v) = (%.3f,%.3f,%.3f)" % colour[1].to_hsva()[:3]
+    (gx
+        .set_source_colour(colour[1])
+        .rectangle(qah.Rect.from_dimensions(swatch_dims) + swatch_pos)
+        .fill()
+    )
+    line_step = gx.font_extents.height * 1.1
+    for i, label in enumerate((label1, label2)) :
+        save_font_matrix = gx.font_matrix
+        scale = min(swatch_dims.x / gx.text_extents(label).width, 1)
+        gx.font_matrix *= Matrix.scale((scale, 1))
+        (gx
+            .move_to
+              (
+                    Vector
+                      (
+                        - gx.text_extents(label).width / 2,
+                        gx.font_extents.ascent + line_step * 0.3
+                      )
+                +
+                    Vector(0, line_step * i)
+                +
+                    swatch_dims * Vector(0.5, 1)
+                +
+                    swatch_pos
+              )
+            .set_source_colour(Colour.grey(0))
+            .show_text(label)
+        )
+        gx.font_matrix = save_font_matrix
+    #end for
+    col += 1
+    if col == swatch_grid.x :
+        col = 0
+        row += 1
+        if row == swatch_grid.y :
+            output.show_page()
+            page_started = False
+        #end if
+    #end if
+#end while
+gx = output = None # only way to flush output!
