@@ -2,7 +2,7 @@ Here are some examples of the use of my Qahirah ([GitLab](https://gitlab.com/ldo
 [GitHub](https://github.com/ldo/qahirah)) Python binding for the Cairo graphics library.
 You will need to have that installed before you can run these.
 
-With one exception, each example script generates its output to a PNG
+Mosto of these example scripts generate their output to a PNG
 file with the same basename as the script. Thus, to run a script
 *script* and see its output, you could do something like
 
@@ -11,9 +11,10 @@ file with the same basename as the script. Thus, to run a script
 Alternatively, you can see the generated output on my [DeviantArt
 account](https://default-cube.deviantart.com/gallery/53606552/Qahirah-Examples).
 
-The exception is the `bulk_font_sample` script; this one is a utility
+The exceptions are `x11_colours_booklet` and `bulk_font_sample`;
+the former generates a PDF file, while the latter is a utility
 for generating sample renditions of a whole lot of fonts at one go,
 as a PDF or PostScript file for easy viewing.
 
 Lawrence D'Oliveiro <ldo@geek-central.gen.nz>
-2020 July 8
+2021 June 7
