@@ -1,0 +1,45 @@
+.TH "BULK_FONT_SAMPLE" "1" "2021-05-23" "Geek Central" "Qahirah Examples"
+
+.SH NAME
+bulk_font_sample -- generate font samples from fonts in bulk
+
+.SH SYNOPSYS
+\fBbulk_font_sample\fR [\fIoptions\fR ...] \fIoutfilename\fR \fIfont_spec\fR [\fIfont_spec\fR ...]
+
+.SH DESCRIPTION
+\fBbulk_font_sample\fR takes one or more \fIfont_spec\fRs and generates text
+samples from them into the output PDF or PostScript file \fIoutfilename\fR.
+The output format is chosen according to the extension given to \fIoutfilename\fR,
+either \fB.pdf\fR or \fB.ps\fR. The output file will contain one page for each
+font, showing a sample of that font.
+
+The \fIfont_spec\fRs can each be a Fontconfig pattern which is matched against
+currently-installed fonts, or it can be the name of a file: either ending in
+\fB.ttf\fR or \fB.otf\fR for a font file, or in \fB.zip\fR for a ZIP archive
+containing font files.
+
+The sample text is a paragraph of the traditional “lorem ipsum”.
+
+.SH OPTIONS
+.TP
+\fB--size=\fIsize\fR
+The font size in points to use for the text sample. If omitted, defaults to 18.
+
+.TP
+\fB--spacing=\fIline_spacing\fR
+The line spacing to use, relative to the font height. If omitted, defaults to 1.1.
+
+.SH EXAMPLES
+
+.RS 4
+\fBbulk_font_sample out.pdf serif sans-serif\fR
+.RE
+
+Generates a samples of whatever installed fonts might match the basic Fontconfig
+specifications “serif” and “sans-serif”.
+
+.RS 4
+\fBbulk_font_sample noto.pdf ~/downloads/fonts/noto.googlecode.com/Noto-hinted.zip\fR
+.RE
+
+Generates samples of all the fonts in a downloaded ZIP archive.

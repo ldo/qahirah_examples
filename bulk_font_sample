@@ -1,14 +1,10 @@
 #!/usr/bin/python3
 #+
 # Example use of Qahirah: render some sample text in a bunch
-# of different fonts. Invoke this script as follows:
+# of different fonts.
 #
-#     bulk_font_sample «outfilename» «font_spec» [«font_spec» ...]
-#
-# where «outfilename» is the name of the output PDF or PostScript file
-# to generate, with one page for each font being sampled, and the
-# «font_spec»s can each be a Fontconfig pattern, a .ttf or .otf font
-# file name, or a .zip archive name containing .ttf or .otf font files.
+# Invocation details are documented in the bulk_font_samples(1) man page,
+# included with this script.
 #
 # Copyright 2020 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
