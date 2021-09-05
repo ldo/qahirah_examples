@@ -461,17 +461,30 @@ snippets = \
     ]
 
 dpi = qah.base_dpi # can increase for higher-quality output
-margin = Vector(10, 10)
+figure_margin = Vector(30, 30)
+label_margin = Vector(0, 10)
 
 nr_rows = math.ceil(math.sqrt(len(snippets)))
 nr_cols = math.ceil(len(snippets) / nr_rows)
+
+label_font = \
+    (qah.Context.create_for_dummy()
+        .select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+        .set_font_size(24)
+    ).scaled_font
 
 pix = qah.ImageSurface.create \
   (
     format = CAIRO.FORMAT_ARGB32,
     dimensions = round
       (
-            (Vector(nr_cols, nr_rows) * (snippet_bounds.dimensions + margin) + margin)
+            (
+                Vector(nr_cols, nr_rows) * (snippet_bounds.dimensions + figure_margin)
+            +
+                Vector(1, nr_rows) * (Vector(0, label_font.font_extents.height) + label_margin)
+            +
+                figure_margin
+            )
         *
             dpi
         /
@@ -484,14 +497,30 @@ gx = \
         .set_source_colour(Colour.grey(0, 0))
         .paint()
         .set_source_colour(Colour.grey(0, 1))
+        .set_scaled_font(label_font)
     )
 row = col = 0
 for snippet in snippets :
     gx.save()
-    gx.translate(Vector(col, row) * (snippet_bounds.dimensions + margin) + margin)
+    gx.translate \
+      (
+            Vector(col, row) * (snippet_bounds.dimensions + figure_margin)
+        +
+            Vector(1, row) * (Vector(0, label_font.font_extents.height) + label_margin)
+        +
+            figure_margin
+      )
+    gx.save()
+    gx.translate(label_margin + Vector(0, label_font.font_extents.ascent + snippet_bounds.height))
+    gx.move_to \
+      ((
+        (snippet_bounds.width - label_font.text_extents(snippet["name"]).x_advance) / 2,
+        0
+      ))
+    gx.show_text(snippet["name"])
+    gx.restore()
     gx.rectangle(snippet_bounds)
     gx.clip()
-    # TODO name
     snippet["action"](gx)
     gx.restore()
     col += 1
