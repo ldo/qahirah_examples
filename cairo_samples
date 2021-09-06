@@ -43,7 +43,7 @@ class Snippets :
         gx.arc(centre, radius, angle1, angle2, False)
         gx.stroke()
         # draw helping lines
-        gx.source_colour = Colour.from_rgba((1, 0.2, 0.2, 0.6))
+        gx.source_colour = (1, 0.2, 0.2, 0.6)
         gx.line_width = 6
         gx.circle(centre, 10)
         gx.fill()
@@ -63,7 +63,7 @@ class Snippets :
         gx.arc(centre, radius, angle1, angle2, True)
         gx.stroke()
         # draw helping lines
-        gx.source_colour = Colour.from_rgba((1, 0.2, 0.2, 0.6))
+        gx.source_colour = (1, 0.2, 0.2, 0.6)
         gx.line_width = 6
         gx.circle(centre, 10)
         gx.fill()
@@ -80,7 +80,7 @@ class Snippets :
         # gx.new_path() # yes, current path is consumed by clip()
         gx.rectangle(snippet_bounds)
         gx.fill()
-        gx.source_colour = Colour.from_rgba((0, 1, 0))
+        gx.source_colour = (0, 1, 0)
         gx.move_to((0, 0))
         gx.line_to((256, 256))
         gx.move_to((256, 0))
@@ -145,9 +145,9 @@ class Snippets :
             #end if
             gx.close_path()
 
-            gx.source_colour = Colour.from_rgba((0.5, 0.5, 1))
+            gx.source_colour = (0.5, 0.5, 1)
             gx.fill_preserve()
-            gx.source_colour = Colour.from_rgba((0.5, 0, 0, 0.5))
+            gx.source_colour = (0.5, 0, 0, 0.5)
             gx.line_width = 10
             gx.stroke()
         #end if
@@ -164,7 +164,7 @@ class Snippets :
         gx.line_width = 10
         gx.stroke()
 
-        gx.source_colour = Colour.from_rgba((1, 0.2, 0.2, 0.6))
+        gx.source_colour = (1, 0.2, 0.2, 0.6)
         gx.line_width = 6
         (gx
             .move_to(p)
@@ -203,9 +203,9 @@ class Snippets :
         gx.close_path()
 
         gx.line_width = 10.0
-        gx.source_colour = Colour.from_rgba((0, 0, 1))
+        gx.source_colour = (0, 0, 1)
         gx.fill_preserve()
-        gx.source_colour = Colour.from_rgba((0, 0, 0))
+        gx.source_colour = (0, 0, 0)
         gx.stroke()
     #end fill_and_stroke2
 
@@ -222,9 +222,9 @@ class Snippets :
 
         gx.fill_rule = CAIRO.FILL_RULE_EVEN_ODD
         (gx
-            .set_source_colour(Colour.from_rgba((0, 0.7, 0)))
+            .set_source_colour((0, 0.7, 0))
             .fill_preserve()
-            .set_source_colour(Colour.from_rgba((0, 0, 0)))
+            .set_source_colour((0, 0, 0))
             .stroke()
         )
 
@@ -239,17 +239,17 @@ class Snippets :
 
         gx.fill_rule = CAIRO.FILL_RULE_WINDING
         (gx
-            .set_source_colour(Colour.from_rgba((0, 0, 0.9)))
+            .set_source_colour((0, 0, 0.9))
             .fill_preserve()
-            .set_source_colour(Colour.from_rgba((0, 0, 0)))
+            .set_source_colour((0, 0, 0))
             .stroke()
         )
     #end fill_style
 
     def gradient(gx) :
         pat = qah.Pattern.create_linear(p0 = (0, 0), p1 = (0, 256.0))
-        pat.add_colour_stop(1, Colour.from_rgba((0, 0, 0, 1)))
-        pat.add_colour_stop(0, Colour.from_rgba((1, 1, 1, 1)))
+        pat.add_colour_stop(1, (0, 0, 0, 1))
+        pat.add_colour_stop(0, (1, 1, 1, 1))
         gx.rectangle(Rect(0, 0, 256, 256))
         gx.source = pat
         gx.fill()
@@ -261,8 +261,8 @@ class Snippets :
             c1 = (102.4, 102.4),
             r1 = 128.0
           )
-        pat.add_colour_stop(0, Colour.from_rgba((1, 1, 1, 1)))
-        pat.add_colour_stop(1, Colour.from_rgba((0, 0, 0, 1)))
+        pat.add_colour_stop(0, (1, 1, 1, 1))
+        pat.add_colour_stop(1, (0, 0, 0, 1))
         gx.source = pat
         gx.circle((128.0, 128.0), 76.8)
         gx.fill()
@@ -321,9 +321,9 @@ class Snippets :
         gx.arc((p1.x + radius, p1.y + radius), radius, 180 * qah.deg, 270 * qah.deg, False)
         gx.close_path()
 
-        gx.source_colour = Colour.from_rgba((0.5, 0.5, 1))
+        gx.source_colour = (0.5, 0.5, 1)
         gx.fill_preserve()
-        gx.source_colour = Colour.from_rgba((0.5, 0, 0, 0.5))
+        gx.source_colour = (0.5, 0, 0, 0.5)
         gx.line_width = 10.0
         gx.stroke()
     #end rounded_rectangle
@@ -341,7 +341,7 @@ class Snippets :
         gx.stroke()
 
         # draw helping lines
-        gx.source_colour = Colour.from_rgba((1, 0.2, 0.2))
+        gx.source_colour = (1, 0.2, 0.2)
         gx.line_width = 2.56
         gx.move_to((64.0, 50.0)).line_to((64.0, 200.0))
         gx.move_to((128.0, 50.0)).line_to((128.0, 200.0))
@@ -379,14 +379,14 @@ class Snippets :
 
         gx.move_to((70.0, 165.0))
         gx.text_path("void")
-        gx.source_colour = Colour.from_rgba((0.5, 0.5, 1))
+        gx.source_colour = (0.5, 0.5, 1)
         gx.fill_preserve()
-        gx.source_colour = Colour.from_rgba((0, 0, 0))
+        gx.source_colour = (0, 0, 0)
         gx.line_width = 2.56
         gx.stroke()
 
         # draw helping markers
-        gx.source_colour = Colour.from_rgba((1, 0.2, 0.2, 0.6))
+        gx.source_colour = (1, 0.2, 0.2, 0.6)
         gx.circle((10.0, 135.0), 5.12)
         gx.close_path()
         gx.circle((70.0, 165.0), 5.12)
@@ -403,7 +403,7 @@ class Snippets :
         gx.show_text(text)
 
         # draw helping lines
-        gx.source_colour = Colour.from_rgba((1, 0.2, 0.2, 0.6))
+        gx.source_colour = (1, 0.2, 0.2, 0.6)
         gx.line_width = 6.0
         gx.circle(pos, 10.0)
         gx.fill()
@@ -425,7 +425,7 @@ class Snippets :
         gx.show_text(text)
 
         # draw helping lines
-        gx.source_colour = Colour.from_rgba((1, 0.2, 0.2, 0.6))
+        gx.source_colour = (1, 0.2, 0.2, 0.6)
         gx.line_width = 6.0
         gx.circle(pos, 10.0)
         gx.fill()
@@ -517,25 +517,25 @@ for snippet in snippets :
     gx.source_colour = Colour.grey(1, 1)
     gx.paint()
     gx.stroke()
-    gx.source_colour = Colour.from_rgba((0xdb / 255, 0xdb / 255, 0xf7 / 255))
+    gx.source_colour = (0xdb / 255, 0xdb / 255, 0xf7 / 255)
     gx.rectangle(code_area)
     gx.fill()
-    gx.source_colour = Colour.from_rgba((0xc5 / 255, 0xc5 / 255, 0xf6 / 255))
+    gx.source_colour = (0xc5 / 255, 0xc5 / 255, 0xf6 / 255)
     gx.line_width = 1
     gx.rectangle(code_area)
     gx.stroke()
     # actual code is drawn below
     gx.scaled_font = label_font
     gx.move_to(figure_margin + Vector(0, label_font.font_extents.ascent))
-    gx.source_colour = Colour.from_rgba((0x4c / 255, 0x4c / 255, 0xe6 / 255))
+    gx.source_colour = (0x4c / 255, 0x4c / 255, 0xe6 / 255)
     gx.show_text(snippet["name"])
     # Clipping-related snippets don’t quite work properly when drawn directly
     # into the PDF surface. This is why I create a separate ImageSurface
     # for all snippets to draw into, then I composite this onto the final page.
     (figdraw
-        .set_source_colour(Colour.from_rgba((0xe / 15, 0xe / 15, 0xe / 15)))
+        .set_source_colour((0xe / 15, 0xe / 15, 0xe / 15))
         .paint()
-        .set_source_colour(Colour.from_rgba((8 / 15, 8 / 15, 8 / 15)))
+        .set_source_colour((8 / 15, 8 / 15, 8 / 15))
         .rectangle(snippet_bounds)
         .set_line_width(1)
         .stroke()
