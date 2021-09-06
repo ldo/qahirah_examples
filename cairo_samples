@@ -18,6 +18,7 @@
 import sys
 import os
 import math
+import inspect
 import qahirah as qah
 from qahirah import \
     CAIRO, \
@@ -461,74 +462,101 @@ snippets = \
     ]
 
 dpi = qah.base_dpi # can increase for higher-quality output
-figure_margin = Vector(30, 30)
+figure_margin = Vector(15, 15)
 label_margin = Vector(0, 10)
-
-nr_rows = math.ceil(math.sqrt(len(snippets)))
-nr_cols = math.ceil(len(snippets) / nr_rows)
+code_width = 750
+code_inset = 75
+figure_inset = 80
 
 label_font = \
     (qah.Context.create_for_dummy()
-        .select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
-        .set_font_size(24)
+        .select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_BOLD)
+        .set_font_size(14)
     ).scaled_font
+code_font = \
+    (qah.Context.create_for_dummy()
+        .select_font_face("mono", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+        .set_font_size(11)
+    ).scaled_font
+code_line_spacing = code_font.font_extents.height * 1.1
 
-pix = qah.ImageSurface.create \
+output = qah.PDFSurface.create \
   (
-    format = CAIRO.FORMAT_ARGB32,
-    dimensions = round
-      (
-            (
-                Vector(nr_cols, nr_rows) * (snippet_bounds.dimensions + figure_margin)
-            +
-                Vector(1, nr_rows) * (Vector(0, label_font.font_extents.height) + label_margin)
-            +
-                figure_margin
-            )
-        *
-            dpi
-        /
-            qah.base_dpi
-      )
+    filename = "%s.pdf" % os.path.basename(sys.argv[0]),
+    dimensions_in_points = (0, 0) # set individually for each page
   )
-gx = \
-    (qah.Context.create(pix)
+gx = qah.Context.create(output)
+fig = qah.ImageSurface.create \
+  (
+    format = CAIRO.FORMAT_RGB24,
+    dimensions = round(snippet_bounds.dimensions * dpi / qah.base_dpi)
+  )
+figdraw = \
+    (qah.Context.create(fig)
         .scale(dpi / qah.base_dpi)
-        .set_source_colour(Colour.grey(0, 0))
-        .paint()
-        .set_source_colour(Colour.grey(0, 1))
-        .set_scaled_font(label_font)
     )
-row = col = 0
+
 for snippet in snippets :
-    gx.save()
-    gx.translate \
+    source = inspect.getsource(snippet["action"]).rstrip("\n").split("\n")
+    code_area = Rect.from_dimensions((code_width, code_line_spacing * len(source)))
+    code_area += Vector \
       (
-            Vector(col, row) * (snippet_bounds.dimensions + figure_margin)
-        +
-            Vector(1, row) * (Vector(0, label_font.font_extents.height) + label_margin)
-        +
-            figure_margin
+        code_inset + figure_margin.x,
+        label_font.font_extents.height + 2 * figure_margin.y
       )
-    gx.save()
-    gx.translate(label_margin + Vector(0, label_font.font_extents.ascent + snippet_bounds.height))
-    gx.move_to \
-      ((
-        (snippet_bounds.width - label_font.text_extents(snippet["name"]).x_advance) / 2,
-        0
-      ))
+    output.set_size \
+      (
+            Vector
+              (
+                code_inset + code_width + snippet_bounds.width - figure_inset,
+                max(code_area.bottom, snippet_bounds.height)
+              )
+        +
+            2 * figure_margin
+      )
+    gx.source_colour = Colour.grey(1, 1)
+    gx.paint()
+    gx.stroke()
+    gx.source_colour = Colour.from_rgba((0xdb / 255, 0xdb / 255, 0xf7 / 255))
+    gx.rectangle(code_area)
+    gx.fill()
+    gx.source_colour = Colour.from_rgba((0xc5 / 255, 0xc5 / 255, 0xf6 / 255))
+    gx.line_width = 1
+    gx.rectangle(code_area)
+    gx.stroke()
+    # actual code is drawn below
+    gx.scaled_font = label_font
+    gx.move_to(figure_margin + Vector(0, label_font.font_extents.ascent))
+    gx.source_colour = Colour.from_rgba((0x4c / 255, 0x4c / 255, 0xe6 / 255))
     gx.show_text(snippet["name"])
+    # Clipping-related snippets don’t quite work properly when drawn directly
+    # into the PDF surface. This is why I create a separate ImageSurface
+    # for all snippets to draw into, then I composite this onto the final page.
+    (figdraw
+        .set_source_colour(Colour.from_rgba((0xe / 15, 0xe / 15, 0xe / 15)))
+        .paint()
+        .set_source_colour(Colour.from_rgba((8 / 15, 8 / 15, 8 / 15)))
+        .rectangle(snippet_bounds)
+        .set_line_width(1)
+        .stroke()
+        .set_source_colour(Colour.grey(0, 1))
+    )
+    figdraw.save()
+    snippet["action"](figdraw)
+    figdraw.restore()
+    gx.save()
+    gx.set_source_surface(fig, Vector(code_width - figure_inset, figure_margin.y))
+    gx.paint()
     gx.restore()
-    gx.rectangle(snippet_bounds)
-    gx.clip()
-    snippet["action"](gx)
-    gx.restore()
-    col += 1
-    if col == nr_cols :
-        col = 0
-        row += 1
-    #end if
+    # draw code on top of snippet output
+    gx.scaled_font = code_font
+    gx.source_colour = Colour.grey(0, 1)
+    gx.move_to(code_area.topleft + Vector(0, code_font.font_extents.ascent))
+    for line in source :
+        save_pos = gx.current_point
+        gx.show_text(line)
+        gx.move_to(save_pos + Vector(0, code_line_spacing))
+    #end for
+    output.show_page()
 #end for
-
-pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))
-
+gx = output = None # only way to flush output!
