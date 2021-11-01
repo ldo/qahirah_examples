@@ -498,6 +498,17 @@ figdraw = \
 
 for snippet in snippets :
     source = inspect.getsource(snippet["action"]).rstrip("\n").split("\n")
+    assert \
+      (
+            source[0].startswith("    def ")
+        and
+            all
+              (
+                len(source[i]) == 0 or source[i].startswith(8 * " ")
+                for i in range(1, len(source))
+              )
+      )
+    source = list(s[8:] for s in source[1:])
     code_area = Rect.from_dimensions((code_width, code_line_spacing * len(source)))
     code_area += Vector \
       (
