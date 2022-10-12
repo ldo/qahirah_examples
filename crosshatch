@@ -18,7 +18,8 @@ from qahirah import \
     Matrix, \
     Path, \
     Rect, \
-    Vector
+    Vector, \
+    VecRange
 Pt = Path.Point
 
 dpi = 144
@@ -573,13 +574,11 @@ ctx = \
         .set_scaled_font(label_font)
     )
 
-row = 0
-col = 0
-for pattern in patterns :
+for pattern, pos in zip(patterns, VecRange((0, 0), (nr_cols, nr_rows))) :
     (ctx.save()
         .translate
           (
-                Vector(col, row) * (figure_plus_label_dimensions + figure_margin)
+                pos * (figure_plus_label_dimensions + figure_margin)
             +
                 figure_margin
           )
@@ -610,11 +609,6 @@ for pattern in patterns :
         .show_text(pattern["name"])
     )
     ctx.restore()
-    col += 1
-    if col == nr_cols :
-        col = 0
-        row += 1
-    #end if
 #end for
 
 pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))

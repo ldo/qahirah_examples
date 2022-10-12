@@ -15,7 +15,8 @@ import qahirah as qah
 from qahirah import \
     CAIRO, \
     Colour, \
-    Vector
+    Vector, \
+    VecRange
 
 def gray_n_code(rotate, base, nr_digits, flip) :
     "generator which yields successive tuples of length nr_digits" \
@@ -105,15 +106,13 @@ ctx = \
         .paint()
     )
 
-row = 0
-col = 0
 if stroke_width != 0 :
     ctx.set_line_width(stroke_width * qah.base_dpi / dpi)
 #end if
-for params in figure_params :
+for params, pos in zip(figure_params, VecRange((0, 0), (nr_cols, nr_rows))) :
     ctx.save()
     (ctx
-        .translate(Vector(col, row) * (figure_dimensions + margin) + margin)
+        .translate(pos * (figure_dimensions + margin) + margin)
         .translate(Vector(1, 1) * outer_radius)
         .rotate(-90 * qah.deg) # start from top rather than right
     )
@@ -157,11 +156,6 @@ for params in figure_params :
         #end for
     #end for
     ctx.restore()
-    col += 1
-    if col == nr_cols :
-        col = 0
-        row += 1
-    #end if
 #end for
 
 pix.flush().write_to_png("%s.png" % os.path.basename(sys.argv[0]))

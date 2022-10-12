@@ -28,7 +28,8 @@ from qahirah import \
     Colour, \
     Context, \
     Matrix, \
-    Vector
+    Vector, \
+    VecRange
 
 #+
 # Useful stuff
@@ -355,12 +356,10 @@ g = \
         .set_source_colour(Colour.grey(0))
         .set_line_width(2)
     )
-row = 0
-col = 0
-for do_tile in truchet_types :
+for do_tile, pos in zip(truchet_types, VecRange((0, 0), (nr_cols, nr_rows))) :
     (g
         .save()
-        .translate(margin + Vector(col, row) * (figure_dimensions + margin))
+        .translate(margin + pos * (figure_dimensions + margin))
     )
     random = RubbishRandom(999) # want same sequence every time
     draw_truchet \
@@ -371,11 +370,6 @@ for do_tile in truchet_types :
         nr_tiles = nr_tiles,
       )
     g.restore()
-    col += 1
-    if col == nr_cols :
-        col = 0
-        row += 1
-    #end if
 #end for
 
 pix.flush().write_to_png("{}.png".format(os.path.basename(sys.argv[0])))
