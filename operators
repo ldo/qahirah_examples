@@ -2,7 +2,7 @@
 #+
 # Demo of Cairo operators.
 #
-# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# Copyright 2015-2022 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
 # <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
 # what you will.
@@ -15,48 +15,15 @@ import qahirah as qah
 from qahirah import \
     CAIRO, \
     Colour, \
+    OPERATOR, \
     Rect, \
     Vector
 
-operator_names = \
-    ( # differ only in case from CAIRO.OPERATOR_xxx names
-        "clear",
-        "source",
-        "over",
-        "in",
-        "out",
-        "atop",
-        "dest",
-        "dest_over",
-        "dest_in",
-        "dest_out",
-        "dest_atop",
-        "xor",
-        "add",
-        "saturate",
-        "multiply",
-        "screen",
-        "overlay",
-        "darken",
-        "lighten",
-        "colour_dodge",
-        "colour_burn",
-        "hard_light",
-        "soft_light",
-        "difference",
-        "exclusion",
-        "HSL_hue",
-        "HSL_saturation",
-        "HSL_colour",
-        "HSL_luminosity",
-    )
-unbounded = \
-    {
-        CAIRO.OPERATOR_IN,
-        CAIRO.OPERATOR_OUT,
-        CAIRO.OPERATOR_DEST_IN,
-        CAIRO.OPERATOR_DEST_ATOP,
-    }
+operator_names = dict \
+  ( # lowercased versions of names
+    (o, "_".join((lambda : c.lower(), lambda : c)[c == "HSL"]() for c in o.name.split("_")))
+    for o in OPERATOR
+  )
 
 def complement(colour) :
     "returns the complement of a Colour."
@@ -71,8 +38,8 @@ def complement(colour) :
 # Mainline
 #-
 
-nr_cols = math.ceil(math.sqrt(len(operator_names)))
-nr_rows = math.ceil(len(operator_names) / nr_cols)
+nr_cols = math.ceil(math.sqrt(len(OPERATOR)))
+nr_rows = math.ceil(len(OPERATOR) / nr_cols)
 
 major_dim = 150
 minor_dim = 100
@@ -116,7 +83,7 @@ pix = qah.ImageSurface.create \
     dimensions = Vector(nr_cols, nr_rows) * draw_bounds.dimensions + margin + Vector(0, top_extra)
   )
 g = qah.Context.create(pix)
-g.operator = CAIRO.OPERATOR_SOURCE
+g.operator = OPERATOR.SOURCE
 g.source_colour = Colour.grey(0, 0)
 text_colour = Colour.grey(0, 1)
 g.paint()
@@ -133,7 +100,8 @@ g.show_text(title)
 row = 0
 col = 0
 g.line_width = 2
-for op_name in operator_names :
+for operator in sorted(OPERATOR, key = lambda o : o.value) :
+    op_name = operator_names[operator]
     dest_rect = \
         (
             draw_bounds
@@ -144,13 +112,12 @@ for op_name in operator_names :
         )
     g.matrix = draw_bounds.transform_to(dest_rect)
     g.reset_clip()
-    g.operator = CAIRO.OPERATOR_OVER
+    g.operator = OPERATOR.OVER
     g.rectangle(Rect.from_dimensions(Vector(major_dim, minor_dim)) + margin)
     g.source = rect_1_pattern
     g.fill()
-    g.operator = getattr(CAIRO, "OPERATOR_" + op_name.upper())
-    op_unbounded = g.operator in unbounded
-    if op_unbounded :
+    g.operator = operator
+    if operator.unbounded :
         g.new_path()
         g.rectangle(draw_bounds)
         g.clip() # to prevent figure from wiping out others
@@ -180,10 +147,10 @@ for op_name in operator_names :
         draw_bounds.middle.x - text_extents.width / 2,
         major_dim + text_extents.y_bearing + text_height * 2
       ))
-    g.operator = CAIRO.OPERATOR_SOURCE
+    g.operator = OPERATOR.SOURCE
     g.source_colour = text_colour
     g.show_text(op_name)
-    if op_unbounded :
+    if operator.unbounded :
         g.rectangle(draw_bounds.inset((2, 2)))
         g.stroke()
     #end if
