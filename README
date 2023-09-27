@@ -1,22 +1,4 @@
-Here are some examples of the use of my Qahirah
-([GitLab](https://gitlab.com/ldo/qahirah),
-[BitBucket](https://bitbucket.org/ldo17/qahirah)) Python binding for the Cairo
-graphics library. You will need to have that installed before you can
-run these.
-
-Mosto of these example scripts generate their output to a PNG
-file with the same basename as the script. Thus, to run a script
-*script* and see its output, you could do something like
-
-> ./*script* && display *script*.png
-
-Alternatively, you can see the generated output on my [DeviantArt
-account](https://default-cube.deviantart.com/gallery/53606552/Qahirah-Examples).
-
-The exceptions are `x11_colours_booklet`, `cairo_samples` and
-`bulk_font_sample`; the first two generate a PDF file, while the
-latter is a utility for generating sample renditions of a whole lot of
-fonts at one go, as a PDF or PostScript file for easy viewing.
-
-Lawrence D'Oliveiro <ldo@geek-central.gen.nz>
-2023 August 26
+This project is no longer being maintained on GitHub.
+Look for it at one of
+* gitlab: https://gitlab.com/ldo/qahirah_examples
+* bitbucket: https://bitbucket.org/ldo17/qahirah_examples
